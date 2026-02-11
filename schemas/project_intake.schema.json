@@ -1,0 +1,151 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://m300-support-desk/schemas/project_intake.schema.json",
+  "title": "Project Intake",
+  "description": "Schema for initial project information submitted by user",
+  "type": "object",
+  "required": [
+    "project_name",
+    "country",
+    "location_description",
+    "technology_type",
+    "target_beneficiaries",
+    "ownership_model",
+    "estimated_cost_usd"
+  ],
+  "properties": {
+    "project_name": {
+      "type": "string",
+      "description": "Name or title of the project",
+      "minLength": 3,
+      "maxLength": 200,
+      "examples": ["Kaduna Community Solar Mini-Grid"]
+    },
+    "country": {
+      "type": "string",
+      "description": "Country where project is located",
+      "minLength": 2,
+      "examples": ["Nigeria", "Kenya", "Ghana"]
+    },
+    "location_description": {
+      "type": "string",
+      "description": "Detailed description of project location including state/region, proximity to grid, population",
+      "minLength": 10,
+      "examples": ["Rural community in Kaduna State, approximately 45km from nearest grid connection. Population ~1,200 across 200 households."]
+    },
+    "technology_type": {
+      "type": "string",
+      "description": "Primary technology for the project",
+      "enum": [
+        "solar_mini_grid",
+        "solar_standalone",
+        "solar_home_systems",
+        "wind_mini_grid",
+        "hydro_mini_grid",
+        "hybrid_mini_grid",
+        "grid_extension",
+        "grid_densification",
+        "clean_cooking",
+        "other"
+      ]
+    },
+    "capacity_kw": {
+      "type": "number",
+      "description": "Installed capacity in kilowatts (for generation projects)",
+      "minimum": 0,
+      "examples": [50, 100, 25]
+    },
+    "target_beneficiaries": {
+      "type": "string",
+      "description": "Description of who will benefit from the project (households, institutions, businesses)",
+      "minLength": 10,
+      "examples": ["200 households, 1 cassava processing cooperative, 2 schools, 1 health post"]
+    },
+    "ownership_model": {
+      "type": "string",
+      "description": "Who will own the project assets",
+      "enum": [
+        "community_cooperative",
+        "public_utility",
+        "public_community_hybrid",
+        "private_with_benefit_sharing",
+        "private_ipp",
+        "undecided"
+      ]
+    },
+    "productive_uses": {
+      "type": "array",
+      "description": "Income-generating or productive activities enabled by the project",
+      "items": {
+        "type": "string"
+      },
+      "examples": [["cassava_processing", "phone_charging", "cold_storage"]]
+    },
+    "estimated_cost_usd": {
+      "type": "number",
+      "description": "Estimated total project cost in USD",
+      "minimum": 0,
+      "examples": [285000, 500000, 175000]
+    },
+    "existing_funding": {
+      "type": "string",
+      "description": "Any funding already secured or committed",
+      "examples": ["Community has committed $15,000 in cash and in-kind contributions"]
+    },
+    "project_stage": {
+      "type": "string",
+      "description": "Current stage of project development",
+      "enum": [
+        "idea",
+        "concept",
+        "early_development",
+        "feasibility_complete",
+        "ready_for_funding",
+        "under_construction",
+        "operational"
+      ],
+      "default": "concept"
+    },
+    "community_engagement": {
+      "type": "string",
+      "description": "Description of community involvement and buy-in",
+      "examples": ["Cooperative formed in 2021 with 180 member households. Monthly meetings held."]
+    },
+    "additional_context": {
+      "type": "string",
+      "description": "Any other relevant information about the project",
+      "examples": ["Area has strong solar resource (5.2 kWh/m2/day average). DISCO confirms no grid extension planned."]
+    },
+    "contact_info": {
+      "type": "object",
+      "description": "Contact information for project proponent",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "organization": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "phone": {
+          "type": "string"
+        }
+      }
+    },
+    "debt_preference": {
+      "type": "string",
+      "description": "Project's preference regarding debt financing",
+      "enum": [
+        "grant_only",
+        "grant_preferred",
+        "open_to_blended",
+        "any_instrument"
+      ],
+      "default": "grant_preferred"
+    }
+  },
+  "additionalProperties": false
+}

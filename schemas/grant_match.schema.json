@@ -1,0 +1,193 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://m300-support-desk/schemas/grant_match.schema.json",
+  "title": "Grant Match",
+  "description": "Schema for Grant Matcher agent output - ranked funding sources with rationale",
+  "type": "object",
+  "required": [
+    "project_name",
+    "matches",
+    "overall_funding_strategy"
+  ],
+  "properties": {
+    "project_name": {
+      "type": "string",
+      "description": "Name of the project being matched"
+    },
+    "matches": {
+      "type": "array",
+      "description": "Ranked list of matching grant sources (top 5)",
+      "items": {
+        "type": "object",
+        "required": [
+          "funder_name",
+          "instrument_type",
+          "fit_score",
+          "fit_rationale",
+          "next_actions"
+        ],
+        "properties": {
+          "funder_id": {
+            "type": "string",
+            "description": "Unique identifier for funder in grants_seed.json"
+          },
+          "funder_name": {
+            "type": "string",
+            "description": "Name of the funding organization/program"
+          },
+          "instrument_type": {
+            "type": "string",
+            "description": "Type of financing instrument",
+            "enum": [
+              "grant",
+              "results_based_grant",
+              "concessional_loan",
+              "equity",
+              "guarantee",
+              "blended_grant_equity",
+              "blended_grant_loan"
+            ]
+          },
+          "fit_score": {
+            "type": "integer",
+            "description": "Computed fit score (0-100)",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "fit_rationale": {
+            "type": "array",
+            "description": "Bullet points explaining the score",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 3
+          },
+          "score_breakdown": {
+            "type": "object",
+            "description": "Detailed component scores",
+            "properties": {
+              "geography_score": {
+                "type": "number"
+              },
+              "thematic_score": {
+                "type": "number"
+              },
+              "size_score": {
+                "type": "number"
+              },
+              "ownership_score": {
+                "type": "number"
+              },
+              "eligibility_score": {
+                "type": "number"
+              },
+              "red_flag_penalty": {
+                "type": "number"
+              },
+              "debt_sensitivity_modifier": {
+                "type": "number"
+              }
+            }
+          },
+          "red_flags": {
+            "type": "array",
+            "description": "Eligibility doubts, debt risks, governance gaps",
+            "items": {
+              "type": "string"
+            }
+          },
+          "next_actions": {
+            "type": "array",
+            "description": "Exact documents/data to prepare for this funder",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 2
+          },
+          "debt_sensitivity_tier": {
+            "type": "string",
+            "description": "Debt sensitivity classification for this funder",
+            "enum": ["tier_1", "tier_2", "tier_3", "tier_4"]
+          }
+        },
+        "additionalProperties": false
+      },
+      "maxItems": 5
+    },
+    "excluded_funders": {
+      "type": "array",
+      "description": "Funders that were considered but excluded",
+      "items": {
+        "type": "object",
+        "required": [
+          "funder_name",
+          "exclusion_reason"
+        ],
+        "properties": {
+          "funder_id": {
+            "type": "string"
+          },
+          "funder_name": {
+            "type": "string"
+          },
+          "exclusion_reason": {
+            "type": "string",
+            "description": "Why this funder was excluded"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "overall_funding_strategy": {
+      "type": "string",
+      "description": "Recommended approach to funding this project across matched sources",
+      "minLength": 50
+    },
+    "debt_sensitivity_summary": {
+      "type": "object",
+      "description": "Summary of debt implications across matches",
+      "properties": {
+        "tier_1_count": {
+          "type": "integer",
+          "description": "Number of debt-free (grant) options"
+        },
+        "tier_2_count": {
+          "type": "integer",
+          "description": "Number of minimal-debt options"
+        },
+        "tier_3_count": {
+          "type": "integer",
+          "description": "Number of moderate-debt options"
+        },
+        "tier_4_count": {
+          "type": "integer",
+          "description": "Number of high-debt options (should be 0 or excluded)"
+        },
+        "recommendation": {
+          "type": "string",
+          "description": "Debt-sensitivity recommendation"
+        }
+      }
+    },
+    "matching_metadata": {
+      "type": "object",
+      "description": "Metadata about the matching process",
+      "properties": {
+        "total_funders_evaluated": {
+          "type": "integer"
+        },
+        "scoring_weights_version": {
+          "type": "string"
+        },
+        "grants_database_version": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

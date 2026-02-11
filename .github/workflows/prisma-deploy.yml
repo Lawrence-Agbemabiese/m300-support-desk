@@ -28,18 +28,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Remove old migrations (temp for demo)
-        run: rm -rf prisma/migrations
-
       - name: Push schema to Supabase (db push for demo)
         env:
           DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
           DIRECT_URL: ${{ secrets.SUPABASE_DIRECT_URL }}
-        run: npx prisma migrate deploy
+        run: npx prisma db push --accept-data-loss
 
-      - name: Regenerate Prisma client (optional)
+      - name: Regenerate Prisma client (for completeness)
         env:
           DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
           DIRECT_URL: ${{ secrets.SUPABASE_DIRECT_URL }}
         run: npx prisma generate
-  
