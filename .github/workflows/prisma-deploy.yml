@@ -28,7 +28,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Apply migrations to Supabase
+      - name: Push schema to Supabase (db push for demo)
         env:
           DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}
           DIRECT_URL: ${{ secrets.SUPABASE_DIRECT_URL }}
