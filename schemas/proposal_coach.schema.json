@@ -1,0 +1,195 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://m300-support-desk/schemas/proposal_coach.schema.json",
+  "title": "Proposal Coach",
+  "description": "Schema for Proposal Coach agent output - grant-ready outline and readiness assessment",
+  "type": "object",
+  "required": [
+    "project_name",
+    "target_funder",
+    "proposal_outline",
+    "readiness_checklist",
+    "missing_info_questionnaire"
+  ],
+  "properties": {
+    "project_name": {
+      "type": "string",
+      "description": "Name of the project"
+    },
+    "target_funder": {
+      "type": "string",
+      "description": "Primary funder the proposal is targeted at (from grant_match)"
+    },
+    "proposal_outline": {
+      "type": "object",
+      "description": "Grant-ready proposal outline with all required sections",
+      "required": [
+        "problem_statement",
+        "theory_of_change",
+        "community_ownership_governance",
+        "technical_approach",
+        "affordability_tariff_principles",
+        "implementation_plan",
+        "mel_framework",
+        "risk_register"
+      ],
+      "properties": {
+        "problem_statement": {
+          "type": "string",
+          "description": "Clear articulation of the problem being addressed",
+          "minLength": 100
+        },
+        "theory_of_change": {
+          "type": "string",
+          "description": "IF-THEN-LEADING TO-BECAUSE logic chain",
+          "minLength": 100
+        },
+        "community_ownership_governance": {
+          "type": "string",
+          "description": "Detailed ownership structure and governance arrangements",
+          "minLength": 100
+        },
+        "technical_approach": {
+          "type": "string",
+          "description": "High-level technical design and specifications",
+          "minLength": 100
+        },
+        "affordability_tariff_principles": {
+          "type": "string",
+          "description": "Tariff structure and affordability mechanisms",
+          "minLength": 50
+        },
+        "implementation_plan": {
+          "type": "string",
+          "description": "Phased implementation timeline with milestones",
+          "minLength": 100
+        },
+        "mel_framework": {
+          "type": "string",
+          "description": "Monitoring, Evaluation, and Learning approach",
+          "minLength": 100
+        },
+        "risk_register": {
+          "type": "string",
+          "description": "Risk identification and mitigation including debt-sensitivity section",
+          "minLength": 100
+        }
+      },
+      "additionalProperties": false
+    },
+    "readiness_checklist": {
+      "type": "array",
+      "description": "Yes/no items for proposal submission readiness",
+      "items": {
+        "type": "object",
+        "required": [
+          "item",
+          "status"
+        ],
+        "properties": {
+          "item": {
+            "type": "string",
+            "description": "Checklist item description"
+          },
+          "status": {
+            "type": "string",
+            "description": "Current status of this item",
+            "enum": ["ready", "not_ready", "unknown", "in_progress"]
+          },
+          "notes": {
+            "type": "string",
+            "description": "Additional notes or instructions"
+          },
+          "priority": {
+            "type": "string",
+            "description": "Priority level for addressing this item",
+            "enum": ["critical", "important", "nice_to_have"]
+          }
+        },
+        "additionalProperties": false
+      },
+      "minItems": 5
+    },
+    "missing_info_questionnaire": {
+      "type": "array",
+      "description": "Questions to ask the project proponent to fill gaps",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 5
+    },
+    "readiness_summary": {
+      "type": "object",
+      "description": "Summary assessment of proposal readiness",
+      "properties": {
+        "overall_readiness": {
+          "type": "string",
+          "description": "Overall readiness assessment",
+          "enum": ["ready_to_submit", "nearly_ready", "significant_gaps", "major_work_needed"]
+        },
+        "ready_count": {
+          "type": "integer",
+          "description": "Number of checklist items marked ready"
+        },
+        "not_ready_count": {
+          "type": "integer",
+          "description": "Number of checklist items marked not ready"
+        },
+        "unknown_count": {
+          "type": "integer",
+          "description": "Number of checklist items with unknown status"
+        },
+        "critical_gaps": {
+          "type": "array",
+          "description": "Critical items that must be addressed before submission",
+          "items": {
+            "type": "string"
+          }
+        },
+        "estimated_preparation_effort": {
+          "type": "string",
+          "description": "Rough estimate of remaining work",
+          "enum": ["days", "weeks", "months"]
+        }
+      }
+    },
+    "funder_specific_guidance": {
+      "type": "object",
+      "description": "Guidance specific to the target funder",
+      "properties": {
+        "key_funder_priorities": {
+          "type": "array",
+          "description": "What this funder particularly values",
+          "items": {
+            "type": "string"
+          }
+        },
+        "common_mistakes_to_avoid": {
+          "type": "array",
+          "description": "Pitfalls to avoid with this funder",
+          "items": {
+            "type": "string"
+          }
+        },
+        "recommended_attachments": {
+          "type": "array",
+          "description": "Supporting documents to include",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "debt_sensitivity_statement": {
+      "type": "string",
+      "description": "Clear statement of debt implications for this proposal",
+      "minLength": 50
+    },
+    "m300_alignment_statement": {
+      "type": "string",
+      "description": "Summary of how proposal aligns with M300 debt-sensitive principles",
+      "minLength": 50
+    }
+  },
+  "additionalProperties": false
+}

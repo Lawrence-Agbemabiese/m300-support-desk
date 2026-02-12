@@ -1,0 +1,139 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://m300-support-desk/schemas/policy_interpretation.schema.json",
+  "title": "Policy Interpretation",
+  "description": "Schema for Policy Interpreter agent output - M300-aligned analysis of project",
+  "type": "object",
+  "required": [
+    "project_name",
+    "m300_alignment_score",
+    "alignment_narrative",
+    "ownership_classification",
+    "grant_suitable_elements",
+    "debt_exposure_risks",
+    "assumptions_list"
+  ],
+  "properties": {
+    "project_name": {
+      "type": "string",
+      "description": "Name of the project being analyzed"
+    },
+    "m300_alignment_score": {
+      "type": "integer",
+      "description": "Overall alignment score with M300 debt-sensitive principles (0-100)",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "alignment_narrative": {
+      "type": "string",
+      "description": "2-3 paragraph explanation of how project aligns with M300 goals and debt-sensitivity principles",
+      "minLength": 100
+    },
+    "ownership_classification": {
+      "type": "string",
+      "description": "Categorized ownership model",
+      "enum": [
+        "community_cooperative",
+        "public_utility",
+        "public_community_hybrid",
+        "private_with_benefit_sharing",
+        "private_ipp",
+        "undetermined"
+      ]
+    },
+    "grant_suitable_elements": {
+      "type": "array",
+      "description": "Features that make this project attractive for grant funding",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "examples": [
+        [
+          "100% community cooperative ownership",
+          "Productive use anchor load",
+          "Last-mile rural population",
+          "No sovereign debt implications"
+        ]
+      ]
+    },
+    "debt_exposure_risks": {
+      "type": "array",
+      "description": "Any aspects that could create debt obligations or fiscal strain",
+      "items": {
+        "type": "string"
+      },
+      "examples": [
+        [
+          "None identified under current structure",
+          "If loan component introduced, cooperative would bear debt"
+        ]
+      ]
+    },
+    "private_capital_risks": {
+      "type": "array",
+      "description": "Risks if private capital is involved (capital flight, guarantees, etc.)",
+      "items": {
+        "type": "string"
+      },
+      "examples": [
+        [
+          "Risk if developer model is imposed: could require tariff guarantees",
+          "Mitigation: Ensure cooperative retains asset ownership"
+        ]
+      ]
+    },
+    "community_ownership_justification": {
+      "type": "string",
+      "description": "Explanation of why public/community ownership makes sense for this project",
+      "minLength": 50
+    },
+    "assumptions_list": {
+      "type": "array",
+      "description": "Things that need verification before proceeding",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "examples": [
+        [
+          "Cooperative is formally registered",
+          "Land tenure is secured",
+          "Community ability-to-pay has been assessed"
+        ]
+      ]
+    },
+    "recommended_framing": {
+      "type": "string",
+      "description": "Suggested way to position the project for funders",
+      "minLength": 50
+    },
+    "debt_sensitivity_tier": {
+      "type": "string",
+      "description": "Assessed debt sensitivity tier based on project structure",
+      "enum": ["tier_1", "tier_2", "tier_3", "tier_4"]
+    },
+    "m300_specific_tags": {
+      "type": "object",
+      "description": "Specific M300 alignment indicators",
+      "properties": {
+        "avoids_sovereign_debt": {
+          "type": "boolean"
+        },
+        "supports_public_ownership": {
+          "type": "boolean"
+        },
+        "prevents_capital_flight": {
+          "type": "boolean"
+        },
+        "preserves_fiscal_capacity": {
+          "type": "boolean"
+        },
+        "prioritizes_grants": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

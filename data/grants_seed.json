@@ -1,0 +1,496 @@
+[
+  {
+    "id": "geapp_minigrid",
+    "funder_name": "Global Energy Alliance for People and Planet (GEAPP)",
+    "instrument_type": "grant",
+    "geography_focus": {
+      "priority_countries": ["Nigeria", "Kenya", "Ethiopia", "DRC", "India", "Indonesia"],
+      "regions": ["Sub-Saharan Africa", "South Asia", "Southeast Asia"],
+      "scope": "multi_country"
+    },
+    "thematic_focus": {
+      "primary": ["mini_grids", "productive_use", "distributed_renewables"],
+      "secondary": ["grid_integration", "energy_access"],
+      "cross_cutting": ["jobs", "gender", "climate"]
+    },
+    "typical_ticket_size_range": {
+      "min_usd": 150000,
+      "max_usd": 500000,
+      "notes": "Larger grants for aggregation platforms"
+    },
+    "key_eligibility": [
+      "Registered legal entity (cooperative, company, NGO)",
+      "Demonstrated community engagement",
+      "Technical feasibility assessment",
+      "Business plan with demand analysis"
+    ],
+    "typical_requirements": [
+      "Demand assessment survey",
+      "Technical design (preliminary acceptable)",
+      "5-year financial projection",
+      "Community contribution documentation",
+      "Land tenure evidence"
+    ],
+    "disallowed_or_risky_patterns": [
+      "Projects requiring sovereign guarantees",
+      "Pure grid extension (no distributed component)",
+      "Projects in conflict zones without security plan"
+    ],
+    "notes_on_alignment_to_community_ownership": "GEAPP explicitly supports community ownership models. Their 'Community of Practice' promotes cooperatives and local ownership. Strong alignment with debt-free approach.",
+    "debt_sensitivity_tier": 1,
+    "application_modality": "ongoing",
+    "website": "energyalliance.org"
+  },
+  {
+    "id": "amsf_rbf",
+    "funder_name": "Africa Mini-Grid Support Facility (AMSF)",
+    "instrument_type": "results_based_grant",
+    "geography_focus": {
+      "priority_countries": [],
+      "regions": ["West Africa", "East Africa", "Southern Africa"],
+      "scope": "africa_wide"
+    },
+    "thematic_focus": {
+      "primary": ["mini_grids"],
+      "secondary": ["solar_home_systems", "productive_use"],
+      "cross_cutting": ["scale", "sustainability"]
+    },
+    "typical_ticket_size_range": {
+      "min_usd": 100000,
+      "max_usd": 1000000,
+      "notes": "Results-based payment per connection"
+    },
+    "key_eligibility": [
+      "Registered mini-grid developer or operator",
+      "Track record of at least 1 operational mini-grid (for some windows)",
+      "Ability to pre-finance construction",
+      "Commitment to affordable tariffs"
+    ],
+    "typical_requirements": [
+      "Connection milestone schedule",
+      "Tariff structure documentation",
+      "Bridge financing arrangement",
+      "Monitoring and reporting capacity"
+    ],
+    "disallowed_or_risky_patterns": [
+      "Cannot pre-finance construction phase",
+      "No track record (for certain windows)",
+      "Tariffs above affordability thresholds"
+    ],
+    "notes_on_alignment_to_community_ownership": "Supports community ownership if bridge financing is available. Does not require private developer. Cooperative can apply if financially capable of pre-financing.",
+    "debt_sensitivity_tier": 2,
+    "application_modality": "periodic_calls",
+    "website": "afdb.org/en/topics-and-sectors/initiatives-partnerships/africa-mini-grid-support-facility"
+  },
+  {
+    "id": "gcf_sap",
+    "funder_name": "Green Climate Fund - Simplified Approval Process",
+    "instrument_type": "grant",
+    "geography_focus": {
+      "priority_countries": [],
+      "regions": ["Africa", "Asia", "Latin America", "Pacific"],
+      "scope": "global_south"
+    },
+    "thematic_focus": {
+      "primary": ["climate_mitigation", "climate_adaptation"],
+      "secondary": ["renewable_energy", "resilience"],
+      "cross_cutting": ["gender", "indigenous_peoples"]
+    },
+    "typical_ticket_size_range": {
+      "min_usd": 250000,
+      "max_usd": 10000000,
+      "notes": "SAP for projects up to $10M; larger via full proposal"
+    },
+    "key_eligibility": [
+      "Must apply through GCF Accredited Entity",
+      "Clear climate rationale (mitigation or adaptation)",
+      "Country ownership (no-objection letter)",
+      "Environmental and social safeguards compliance"
+    ],
+    "typical_requirements": [
+      "Concept note or funding proposal",
+      "GHG emissions reduction estimate (for mitigation)",
+      "Adaptation benefits documentation",
+      "Gender assessment",
+      "Co-financing (often required)"
+    ],
+    "disallowed_or_risky_patterns": [
+      "Fossil fuel components",
+      "Projects without clear climate impact",
+      "Weak country ownership"
+    ],
+    "notes_on_alignment_to_community_ownership": "GCF supports public and community ownership. Accredited Entities include UN agencies and national entities that can channel to community projects. Grant instrument avoids debt.",
+    "debt_sensitivity_tier": 1,
+    "application_modality": "ongoing",
+    "website": "greenclimate.fund"
+  },
+  {
+    "id": "gavi_cceop",
+    "funder_name": "Gavi Cold Chain Equipment Optimization Platform (CCEOP)",
+    "instrument_type": "grant",
+    "geography_focus": {
+      "priority_countries": ["Nigeria", "DRC", "Ethiopia", "Pakistan", "India"],
+      "regions": ["Gavi-eligible countries"],
+      "scope": "multi_country"
+    },
+    "thematic_focus": {
+      "primary": ["vaccine_cold_chain", "health_facility_electrification"],
+      "secondary": ["solar_direct_drive"],
+      "cross_cutting": ["immunization", "health_systems"]
+    },
+    "typical_ticket_size_range": {
+      "min_usd": 50000,
+      "max_usd": 5000000,
+      "notes": "Per-country allocation based on need"
+    },
+    "key_eligibility": [
+      "Gavi-eligible country (verified by Gavi)",
+      "Health facilities in national inventory",
+      "Ministry of Health engagement",
+      "WHO PQS equipment specifications"
+    ],
+    "typical_requirements": [
+      "Cold chain equipment inventory",
+      "National deployment plan",
+      "Coordination with EPI program",
+      "Installation and maintenance plan"
+    ],
+    "disallowed_or_risky_patterns": [
+      "Non-health applications",
+      "Equipment not meeting WHO PQS standards",
+      "Private sector health facilities (typically)"
+    ],
+    "notes_on_alignment_to_community_ownership": "Supports public ownership (Ministry of Health). Equipment becomes government asset. No debt implications. Can integrate community maintenance models.",
+    "debt_sensitivity_tier": 1,
+    "application_modality": "national_allocation",
+    "website": "gavi.org/our-alliance/market-shaping/cold-chain-equipment"
+  },
+  {
+    "id": "power_africa_health",
+    "funder_name": "Power Africa Health Electrification Initiative",
+    "instrument_type": "grant",
+    "geography_focus": {
+      "priority_countries": ["Nigeria", "Kenya", "Tanzania", "Uganda", "Ethiopia"],
+      "regions": ["Sub-Saharan Africa"],
+      "scope": "africa_only"
+    },
+    "thematic_focus": {
+      "primary": ["health_facility_electrification"],
+      "secondary": ["solar_standalone", "mini_grids_health"],
+      "cross_cutting": ["maternal_health", "vaccine_delivery"]
+    },
+    "typical_ticket_size_range": {
+      "min_usd": 100000,
+      "max_usd": 2000000,
+      "notes": "Through implementing partners"
+    },
+    "key_eligibility": [
+      "Power Africa partner country",
+      "Health facility focus",
+      "Ministry of Health coordination",
+      "Technical partner or implementer identified"
+    ],
+    "typical_requirements": [
+      "Facility assessment",
+      "Equipment specifications",
+      "Implementation timeline",
+      "Sustainability plan"
+    ],
+    "disallowed_or_risky_patterns": [
+      "Non-health applications",
+      "Countries outside Power Africa scope",
+      "Private hospital focus"
+    ],
+    "notes_on_alignment_to_community_ownership": "Supports public sector (government health facilities). USAID grant mechanism ensures no debt creation. Community management models encouraged for sustainability.",
+    "debt_sensitivity_tier": 1,
+    "application_modality": "through_partners",
+    "website": "usaid.gov/powerafrica"
+  },
+  {
+    "id": "endev_rbf",
+    "funder_name": "Energising Development (EnDev)",
+    "instrument_type": "results_based_grant",
+    "geography_focus": {
+      "priority_countries": ["Benin", "Ethiopia", "Kenya", "Malawi", "Mozambique", "Rwanda", "Senegal", "Tanzania", "Uganda"],
+      "regions": ["Sub-Saharan Africa", "Southeast Asia", "Latin America"],
+      "scope": "multi_country"
+    },
+    "thematic_focus": {
+      "primary": ["energy_access", "clean_cooking", "productive_use"],
+      "secondary": ["mini_grids", "solar_home_systems"],
+      "cross_cutting": ["market_development", "pro_poor"]
+    },
+    "typical_ticket_size_range": {
+      "min_usd": 50000,
+      "max_usd": 500000,
+      "notes": "RBF payments based on verified connections/sales"
+    },
+    "key_eligibility": [
+      "Active in EnDev country",
+      "Energy access focus (Tier 1+)",
+      "Pro-poor targeting",
+      "Sustainability pathway"
+    ],
+    "typical_requirements": [
+      "Market assessment",
+      "Pro-poor business model",
+      "Verification methodology",
+      "Reporting capacity"
+    ],
+    "disallowed_or_risky_patterns": [
+      "Countries without EnDev presence",
+      "Non-energy access applications",
+      "High-income customer focus"
+    ],
+    "notes_on_alignment_to_community_ownership": "EnDev supports various ownership models including community cooperatives. RBF structure means no upfront debt requirement for EnDev funds, but may need bridge financing.",
+    "debt_sensitivity_tier": 2,
+    "application_modality": "country_programs",
+    "website": "endev.info"
+  },
+  {
+    "id": "undp_africa_minigrid",
+    "funder_name": "UNDP Africa Minigrids Program",
+    "instrument_type": "grant",
+    "geography_focus": {
+      "priority_countries": ["Burkina Faso", "DRC", "Eswatini", "Ethiopia", "Madagascar", "Malawi", "Nigeria", "Somalia", "Sudan", "Zambia"],
+      "regions": ["Sub-Saharan Africa"],
+      "scope": "africa_only"
+    },
+    "thematic_focus": {
+      "primary": ["mini_grids"],
+      "secondary": ["policy_support", "business_model_innovation"],
+      "cross_cutting": ["gender", "climate", "local_capacity"]
+    },
+    "typical_ticket_size_range": {
+      "min_usd": 100000,
+      "max_usd": 1500000,
+      "notes": "Country-level allocations for demonstration projects"
+    },
+    "key_eligibility": [
+      "Located in program country",
+      "Alignment with national electrification plan",
+      "Government support",
+      "Replication potential"
+    ],
+    "typical_requirements": [
+      "Technical feasibility study",
+      "Business model documentation",
+      "Policy alignment letter",
+      "Community engagement evidence"
+    ],
+    "disallowed_or_risky_patterns": [
+      "Countries not in program",
+      "Grid-connected projects",
+      "Purely private projects without public benefit"
+    ],
+    "notes_on_alignment_to_community_ownership": "Program explicitly supports community ownership models and cooperative structures. Funded by GEF, so grant instrument with no debt implications.",
+    "debt_sensitivity_tier": 1,
+    "application_modality": "country_programs",
+    "website": "undp.org/africa-minigrids"
+  },
+  {
+    "id": "usadf_energy",
+    "funder_name": "US African Development Foundation - Energy Grants",
+    "instrument_type": "grant",
+    "geography_focus": {
+      "priority_countries": [],
+      "regions": ["Sub-Saharan Africa"],
+      "scope": "africa_wide"
+    },
+    "thematic_focus": {
+      "primary": ["community_enterprise", "productive_use"],
+      "secondary": ["energy_access", "agriculture"],
+      "cross_cutting": ["enterprise_development", "marginalized_groups"]
+    },
+    "typical_ticket_size_range": {
+      "min_usd": 50000,
+      "max_usd": 250000,
+      "notes": "Direct grants to community enterprises"
+    },
+    "key_eligibility": [
+      "100% African-owned enterprise",
+      "Community-based or cooperative structure",
+      "Job creation focus",
+      "Sustainability pathway"
+    ],
+    "typical_requirements": [
+      "Business plan",
+      "Community ownership documentation",
+      "Financial projections",
+      "Job creation targets"
+    ],
+    "disallowed_or_risky_patterns": [
+      "Foreign-owned enterprises",
+      "Non-African beneficiaries",
+      "Projects without community ownership"
+    ],
+    "notes_on_alignment_to_community_ownership": "USADF specifically requires African and community ownership. Perfect alignment with debt-free, community-ownership principles. Direct grants to cooperatives.",
+    "debt_sensitivity_tier": 1,
+    "application_modality": "open_application",
+    "website": "usadf.gov"
+  },
+  {
+    "id": "sef_trust_minigrid",
+    "funder_name": "Sustainable Energy Fund for Africa - Mini-Grid Window",
+    "instrument_type": "grant",
+    "geography_focus": {
+      "priority_countries": [],
+      "regions": ["Africa"],
+      "scope": "africa_wide"
+    },
+    "thematic_focus": {
+      "primary": ["mini_grids", "renewable_energy"],
+      "secondary": ["grid_integration", "enabling_environment"],
+      "cross_cutting": ["private_sector", "scale"]
+    },
+    "typical_ticket_size_range": {
+      "min_usd": 500000,
+      "max_usd": 3000000,
+      "notes": "Larger projects; may co-finance with AfDB loans"
+    },
+    "key_eligibility": [
+      "African location",
+      "Renewable energy focus",
+      "Scale-up potential",
+      "Government support"
+    ],
+    "typical_requirements": [
+      "Feasibility study",
+      "Detailed business plan",
+      "Financial model",
+      "Government endorsement"
+    ],
+    "disallowed_or_risky_patterns": [
+      "Standalone pilots without scale pathway",
+      "Fossil fuel components",
+      "Projects outside Africa"
+    ],
+    "notes_on_alignment_to_community_ownership": "SEFA supports various ownership models. Grant component can be debt-free, but often combined with AfDB loans for larger projects. Verify structure.",
+    "debt_sensitivity_tier": 2,
+    "application_modality": "periodic_calls",
+    "website": "afdb.org/en/topics-and-sectors/initiatives-partnerships/sustainable-energy-fund-africa"
+  },
+  {
+    "id": "shell_foundation",
+    "funder_name": "Shell Foundation - Access to Energy",
+    "instrument_type": "grant",
+    "geography_focus": {
+      "priority_countries": ["Nigeria", "Kenya", "Tanzania", "Uganda", "India"],
+      "regions": ["Sub-Saharan Africa", "South Asia"],
+      "scope": "multi_country"
+    },
+    "thematic_focus": {
+      "primary": ["energy_access", "enterprise_development"],
+      "secondary": ["mini_grids", "productive_use", "clean_cooking"],
+      "cross_cutting": ["market_building", "impact_measurement"]
+    },
+    "typical_ticket_size_range": {
+      "min_usd": 100000,
+      "max_usd": 1000000,
+      "notes": "Multi-year grants for enterprise development"
+    },
+    "key_eligibility": [
+      "Enterprise or social enterprise model",
+      "Scale potential",
+      "Strong management team",
+      "Clear impact thesis"
+    ],
+    "typical_requirements": [
+      "Detailed business plan",
+      "Management team CVs",
+      "Financial projections",
+      "Impact metrics framework"
+    ],
+    "disallowed_or_risky_patterns": [
+      "Pure charity without sustainability model",
+      "Fossil fuel lock-in",
+      "Weak governance"
+    ],
+    "notes_on_alignment_to_community_ownership": "Shell Foundation supports social enterprises including community-based models. Grant instrument, but typically expects enterprise sustainability. Good for cooperatives with commercial orientation.",
+    "debt_sensitivity_tier": 1,
+    "application_modality": "invitation_based",
+    "website": "shellfoundation.org"
+  },
+  {
+    "id": "eu_electrifi",
+    "funder_name": "ElectriFI - Electrification Financing Initiative",
+    "instrument_type": "blended_grant_equity",
+    "geography_focus": {
+      "priority_countries": [],
+      "regions": ["Sub-Saharan Africa", "Southeast Asia", "Latin America"],
+      "scope": "global_south"
+    },
+    "thematic_focus": {
+      "primary": ["energy_access", "mini_grids", "solar_home_systems"],
+      "secondary": ["grid_connection", "productive_use"],
+      "cross_cutting": ["private_sector", "market_development"]
+    },
+    "typical_ticket_size_range": {
+      "min_usd": 500000,
+      "max_usd": 10000000,
+      "notes": "Blended grants, equity, and debt"
+    },
+    "key_eligibility": [
+      "Energy access business",
+      "Scale potential",
+      "Financial sustainability pathway",
+      "Impact demonstration"
+    ],
+    "typical_requirements": [
+      "Business plan with scale pathway",
+      "Financial projections (5+ years)",
+      "Impact measurement framework",
+      "Governance documentation"
+    ],
+    "disallowed_or_risky_patterns": [
+      "Non-viable business models",
+      "Weak governance",
+      "Fossil fuel components"
+    ],
+    "notes_on_alignment_to_community_ownership": "ElectriFI prefers private sector focus. Community cooperatives may qualify if structured commercially. Blended structure means some components may not be grants. Evaluate carefully.",
+    "debt_sensitivity_tier": 3,
+    "application_modality": "ongoing",
+    "website": "electrifi.eu"
+  },
+  {
+    "id": "rockefeller_foundation",
+    "funder_name": "Rockefeller Foundation - Power for Climate",
+    "instrument_type": "grant",
+    "geography_focus": {
+      "priority_countries": ["Nigeria", "Kenya", "Uganda", "India"],
+      "regions": ["Sub-Saharan Africa", "South Asia"],
+      "scope": "multi_country"
+    },
+    "thematic_focus": {
+      "primary": ["distributed_renewables", "mini_grids", "grid_reliability"],
+      "secondary": ["productive_use", "health_energy_nexus"],
+      "cross_cutting": ["climate", "equity", "systems_change"]
+    },
+    "typical_ticket_size_range": {
+      "min_usd": 250000,
+      "max_usd": 5000000,
+      "notes": "Strategic grants for systems change"
+    },
+    "key_eligibility": [
+      "Alignment with Foundation strategy",
+      "Systems change potential",
+      "Strong track record",
+      "Replication pathway"
+    ],
+    "typical_requirements": [
+      "Concept note (usually invited)",
+      "Theory of change",
+      "Detailed budget",
+      "MEL framework"
+    ],
+    "disallowed_or_risky_patterns": [
+      "Pure service delivery without innovation",
+      "Weak institutional capacity",
+      "Single-site pilots without learning"
+    ],
+    "notes_on_alignment_to_community_ownership": "Rockefeller supports community-focused models. Strong interest in public goods and equity. Grant instrument with no debt implications. May be harder to access directly.",
+    "debt_sensitivity_tier": 1,
+    "application_modality": "invitation_based",
+    "website": "rockefellerfoundation.org/initiative/power"
+  }
+]

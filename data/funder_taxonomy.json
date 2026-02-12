@@ -1,0 +1,238 @@
+{
+  "instrument_types": {
+    "grant": {
+      "description": "Non-repayable funding with no debt obligations",
+      "debt_sensitivity": "tier_1",
+      "characteristics": [
+        "No repayment required",
+        "No sovereign guarantee needed",
+        "No interest payments",
+        "Full ownership of funded assets"
+      ]
+    },
+    "results_based_grant": {
+      "description": "Grant paid upon achievement of verified results (e.g., connections)",
+      "debt_sensitivity": "tier_1_or_2",
+      "characteristics": [
+        "Payment contingent on results",
+        "May require bridge financing for implementation",
+        "No repayment of funds received",
+        "Typically per-unit payment (e.g., $/connection)"
+      ],
+      "considerations": [
+        "Bridge financing creates temporary debt exposure",
+        "Verify implementing entity can pre-finance"
+      ]
+    },
+    "concessional_loan": {
+      "description": "Loan with below-market interest rates and favorable terms",
+      "debt_sensitivity": "tier_3_or_4",
+      "characteristics": [
+        "Requires repayment",
+        "Below-market interest (typically <2%)",
+        "Long grace periods (5+ years)",
+        "May require sovereign guarantee"
+      ],
+      "considerations": [
+        "Still adds to debt burden",
+        "Creates future fiscal obligations",
+        "May crowd out other spending"
+      ]
+    },
+    "commercial_loan": {
+      "description": "Market-rate loan",
+      "debt_sensitivity": "tier_4",
+      "characteristics": [
+        "Market interest rates",
+        "Standard repayment terms",
+        "Full credit risk on borrower"
+      ],
+      "considerations": [
+        "Not appropriate for community energy projects",
+        "Significant debt burden"
+      ]
+    },
+    "equity": {
+      "description": "Ownership stake investment",
+      "debt_sensitivity": "tier_2_or_3",
+      "characteristics": [
+        "No fixed repayment",
+        "Share in profits/losses",
+        "Investor has ownership rights"
+      ],
+      "considerations": [
+        "May require government guarantees",
+        "Profit extraction reduces local benefit",
+        "Potential for capital flight"
+      ]
+    },
+    "guarantee": {
+      "description": "Risk mitigation instrument backing another financing source",
+      "debt_sensitivity": "tier_3_or_4",
+      "characteristics": [
+        "Creates contingent liability",
+        "Enables other financing",
+        "May be called if project fails"
+      ],
+      "considerations": [
+        "Sovereign guarantees treated as debt by IMF",
+        "Hidden fiscal risk",
+        "Can trigger debt distress"
+      ]
+    },
+    "blended_grant_equity": {
+      "description": "Combination of grant and equity components",
+      "debt_sensitivity": "varies",
+      "characteristics": [
+        "Multiple instruments in single package",
+        "Grant portion reduces overall risk",
+        "Equity portion involves ownership dilution"
+      ],
+      "considerations": [
+        "Evaluate each component separately",
+        "Grant portion preferred",
+        "Be cautious of equity terms"
+      ]
+    }
+  },
+  "geography_classifications": {
+    "country_specific": {
+      "description": "Funder names specific eligible countries",
+      "matching_score": 100
+    },
+    "regional": {
+      "description": "Funder covers geographic region (e.g., West Africa, East Africa)",
+      "matching_score": 80
+    },
+    "africa_wide": {
+      "description": "Funder covers all African countries",
+      "matching_score": 60
+    },
+    "global_south": {
+      "description": "Funder covers developing countries globally",
+      "matching_score": 50
+    },
+    "global": {
+      "description": "Funder operates worldwide",
+      "matching_score": 40
+    }
+  },
+  "thematic_classifications": {
+    "primary_focus": {
+      "mini_grids": {
+        "aliases": ["minigrids", "mini-grids", "isolated_grids", "microgrids"],
+        "related": ["distributed_renewables", "off_grid_solar"]
+      },
+      "productive_use": {
+        "aliases": ["productive_uses", "income_generation", "agricultural_processing"],
+        "related": ["mini_grids", "enterprise_development"]
+      },
+      "health_facility_electrification": {
+        "aliases": ["health_electrification", "clinic_solar", "hospital_power"],
+        "related": ["vaccine_cold_chain", "public_institutions"]
+      },
+      "vaccine_cold_chain": {
+        "aliases": ["cold_chain", "immunization_cold_chain", "SDD"],
+        "related": ["health_facility_electrification", "gavi"]
+      },
+      "solar_home_systems": {
+        "aliases": ["SHS", "pico_solar", "household_solar"],
+        "related": ["off_grid_solar", "energy_access"]
+      },
+      "clean_cooking": {
+        "aliases": ["improved_cookstoves", "LPG", "biogas_cooking"],
+        "related": ["household_energy", "indoor_air_quality"]
+      },
+      "energy_access": {
+        "aliases": ["electrification", "electricity_access"],
+        "related": ["mini_grids", "solar_home_systems", "grid_extension"]
+      }
+    },
+    "secondary_focus": {
+      "climate_mitigation": {
+        "description": "Projects that reduce GHG emissions",
+        "indicators": ["GHG_reduction", "fossil_fuel_displacement"]
+      },
+      "climate_adaptation": {
+        "description": "Projects that increase resilience to climate impacts",
+        "indicators": ["resilience", "disaster_preparedness"]
+      },
+      "grid_integration": {
+        "description": "Projects connecting distributed resources to main grid",
+        "indicators": ["grid_stability", "interconnection"]
+      }
+    },
+    "cross_cutting": {
+      "gender": {
+        "description": "Projects with explicit gender focus or impact",
+        "indicators": ["women_beneficiaries", "women_employment", "women_ownership"]
+      },
+      "jobs": {
+        "description": "Projects creating employment",
+        "indicators": ["direct_jobs", "indirect_jobs", "skills_training"]
+      },
+      "youth": {
+        "description": "Projects targeting young people",
+        "indicators": ["youth_employment", "training", "entrepreneurship"]
+      }
+    }
+  },
+  "ownership_classifications": {
+    "community_cooperative": {
+      "description": "Fully owned by community members through cooperative structure",
+      "m300_alignment": "highest",
+      "grant_suitability": "excellent",
+      "debt_risk": "lowest"
+    },
+    "public_utility": {
+      "description": "Owned by government (national, state, or municipal)",
+      "m300_alignment": "high",
+      "grant_suitability": "good",
+      "debt_risk": "varies_by_fiscal_capacity"
+    },
+    "public_community_hybrid": {
+      "description": "Government owns assets, community manages operations",
+      "m300_alignment": "high",
+      "grant_suitability": "good",
+      "debt_risk": "low_if_grant_funded"
+    },
+    "private_with_benefit_sharing": {
+      "description": "Private ownership with community benefit mechanisms",
+      "m300_alignment": "moderate",
+      "grant_suitability": "conditional",
+      "debt_risk": "varies"
+    },
+    "private_ipp": {
+      "description": "Independent power producer with commercial structure",
+      "m300_alignment": "low",
+      "grant_suitability": "poor",
+      "debt_risk": "may_require_guarantees"
+    }
+  },
+  "debt_sensitivity_tiers": {
+    "tier_1": {
+      "name": "Debt-Free",
+      "color": "green",
+      "description": "No debt creation at any level",
+      "recommended_for": ["all_community_projects"]
+    },
+    "tier_2": {
+      "name": "Minimal Debt Exposure",
+      "color": "yellow",
+      "description": "Small, manageable debt held by implementing entity",
+      "recommended_for": ["cooperatives_with_capacity"]
+    },
+    "tier_3": {
+      "name": "Moderate Debt Risk",
+      "color": "orange",
+      "description": "Significant debt component or sub-sovereign guarantees",
+      "recommended_for": ["only_if_no_alternatives"]
+    },
+    "tier_4": {
+      "name": "High Debt Risk",
+      "color": "red",
+      "description": "Majority debt or sovereign guarantee required",
+      "recommended_for": ["generally_excluded"]
+    }
+  }
+}

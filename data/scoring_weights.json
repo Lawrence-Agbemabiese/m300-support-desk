@@ -1,0 +1,236 @@
+{
+  "version": "1.0",
+  "description": "Scoring weights for grant matching, aligned with M300 debt-sensitivity principles",
+
+  "component_weights": {
+    "geography": {
+      "weight": 0.25,
+      "rationale": "Geography determines basic eligibility; important but not differentiating among eligible funders"
+    },
+    "thematic": {
+      "weight": 0.30,
+      "rationale": "Thematic fit is strongest predictor of funder interest; highest weight"
+    },
+    "size": {
+      "weight": 0.15,
+      "rationale": "Important for practicality but projects can be right-sized or phased"
+    },
+    "ownership": {
+      "weight": 0.20,
+      "rationale": "Critical for M300 alignment and debt-sensitivity; high weight"
+    },
+    "eligibility": {
+      "weight": 0.10,
+      "rationale": "Usually binary (eligible or not); lower weight for scoring variation"
+    }
+  },
+
+  "geography_scoring": {
+    "country_priority": {
+      "score": 100,
+      "condition": "Project country explicitly listed as funder priority"
+    },
+    "country_in_region": {
+      "score": 80,
+      "condition": "Project country within funder's regional scope"
+    },
+    "africa_wide_for_african_country": {
+      "score": 60,
+      "condition": "Funder covers all of Africa, project in Africa"
+    },
+    "global_south_for_eligible_country": {
+      "score": 50,
+      "condition": "Funder covers Global South, project in eligible country"
+    },
+    "adjacent_region": {
+      "score": 30,
+      "condition": "Project country borders funder's focus region"
+    },
+    "not_covered": {
+      "score": 0,
+      "condition": "Project country not in funder scope"
+    }
+  },
+
+  "thematic_scoring": {
+    "primary_match": {
+      "score": 100,
+      "condition": "Project type matches funder's primary focus"
+    },
+    "secondary_match": {
+      "score": 80,
+      "condition": "Project type matches funder's secondary focus"
+    },
+    "cross_cutting_match": {
+      "score": 60,
+      "condition": "Project has strong cross-cutting elements funder values"
+    },
+    "adjacent_match": {
+      "score": 40,
+      "condition": "Project type is adjacent to funder's focus areas"
+    },
+    "weak_match": {
+      "score": 20,
+      "condition": "Some thematic overlap but not strong alignment"
+    },
+    "no_match": {
+      "score": 0,
+      "condition": "No thematic connection"
+    }
+  },
+
+  "size_scoring": {
+    "within_range": {
+      "score": 100,
+      "condition": "Project cost within funder's typical ticket size"
+    },
+    "within_50pct_boundary": {
+      "score": 70,
+      "condition": "Project cost within 50% of range boundaries"
+    },
+    "within_100pct_boundary": {
+      "score": 40,
+      "condition": "Project cost within 100% of range boundaries"
+    },
+    "far_outside": {
+      "score": 10,
+      "condition": "Project cost significantly outside typical range"
+    }
+  },
+
+  "ownership_scoring": {
+    "community_cooperative": {
+      "base_score": 100,
+      "funder_preference_modifiers": {
+        "prefers_community": 0,
+        "neutral": -10,
+        "prefers_private": -40
+      }
+    },
+    "public_utility": {
+      "base_score": 90,
+      "funder_preference_modifiers": {
+        "prefers_public": 0,
+        "neutral": -10,
+        "prefers_private": -30
+      }
+    },
+    "public_community_hybrid": {
+      "base_score": 95,
+      "funder_preference_modifiers": {
+        "prefers_community": -5,
+        "neutral": -5,
+        "prefers_private": -35
+      }
+    },
+    "private_with_benefit_sharing": {
+      "base_score": 60,
+      "funder_preference_modifiers": {
+        "prefers_private": 20,
+        "neutral": 0,
+        "prefers_community": -30
+      }
+    },
+    "private_ipp": {
+      "base_score": 40,
+      "funder_preference_modifiers": {
+        "prefers_private": 30,
+        "neutral": 0,
+        "prefers_community": -40
+      }
+    }
+  },
+
+  "eligibility_scoring": {
+    "all_criteria_met": {
+      "score": 100,
+      "condition": "All stated eligibility criteria clearly satisfied"
+    },
+    "most_criteria_met": {
+      "score": 70,
+      "condition": "Most criteria met, 1-2 uncertain"
+    },
+    "some_criteria_met": {
+      "score": 40,
+      "condition": "Some criteria met, significant gaps"
+    },
+    "key_criteria_not_met": {
+      "score": 0,
+      "condition": "Critical eligibility criterion not met"
+    }
+  },
+
+  "red_flag_penalties": {
+    "major": {
+      "penalty": 0.50,
+      "examples": [
+        "Instrument mismatch: project seeks grant-only, funder offers only loans",
+        "Sovereign debt risk: funder requires government guarantee for community project",
+        "Geography exclusion: country explicitly excluded",
+        "Ownership conflict: funder requires private developer for community-owned project"
+      ]
+    },
+    "moderate": {
+      "penalty": 0.25,
+      "examples": [
+        "Partial geography fit: country not explicitly listed",
+        "Size stretch: project cost significantly outside range",
+        "Missing eligibility: one key criterion unclear",
+        "Timing mismatch: funder's call may not align"
+      ]
+    },
+    "minor": {
+      "penalty": 0.10,
+      "examples": [
+        "Documentation gaps: some required documents not yet available",
+        "Governance questions: ownership structure needs clarification",
+        "Technical uncertainty: technology not in funder's common portfolio",
+        "Capacity concerns: implementing entity may need support"
+      ]
+    }
+  },
+
+  "debt_sensitivity_modifiers": {
+    "description": "Additional scoring adjustments based on M300 debt-sensitivity principles",
+    "tier_1_grant_only": {
+      "modifier": 1.0,
+      "description": "No penalty - ideal instrument"
+    },
+    "tier_2_minimal_debt": {
+      "modifier": 0.95,
+      "description": "Slight reduction for bridge financing risk"
+    },
+    "tier_3_moderate_debt": {
+      "modifier": 0.75,
+      "description": "Significant reduction - proceed with caution"
+    },
+    "tier_4_high_debt": {
+      "modifier": 0.50,
+      "description": "Major reduction - generally excluded for community projects"
+    }
+  },
+
+  "final_score_calculation": {
+    "formula": "base_score * (1 - red_flag_penalty) * debt_sensitivity_modifier",
+    "minimum_threshold": 30,
+    "description": "Funders scoring below threshold are excluded from results"
+  },
+
+  "tie_breaking_rules": [
+    {
+      "priority": 1,
+      "rule": "Prefer grant over results_based_grant over blended",
+      "rationale": "Minimizes debt exposure and bridge financing risk"
+    },
+    {
+      "priority": 2,
+      "rule": "Prefer explicit community ownership support",
+      "rationale": "Better alignment with M300 recommendations"
+    },
+    {
+      "priority": 3,
+      "rule": "Prefer larger typical ticket size",
+      "rationale": "More headroom for project scope"
+    }
+  ]
+}
