@@ -20,6 +20,38 @@ const sectionLabels: Record<string, string> = {
   risk_register: 'Risk Register',
 };
 
+function FormattedSectionContent({ content }: { content: string }) {
+  const cleaned = content.trim().replace(/^"+|"+$/g, '');
+  const lines = cleaned
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+
+  const hasBullets = lines.some((line) => line.startsWith('- '));
+
+  if (!hasBullets) {
+    return <p className="text-gray-600 whitespace-pre-wrap">{cleaned}</p>;
+  }
+
+  const introLines = lines.filter((line) => !line.startsWith('- '));
+  const bulletLines = lines.filter((line) => line.startsWith('- ')).map((line) => line.slice(2).trim());
+
+  return (
+    <div className="space-y-2">
+      {introLines.map((line, idx) => (
+        <p key={`intro-${idx}`} className="text-gray-600">
+          {line}
+        </p>
+      ))}
+      <ul className="list-disc list-inside space-y-1 text-gray-600">
+        {bulletLines.map((line, idx) => (
+          <li key={`bullet-${idx}`}>{line}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function ProposalSection({ title, content, index }: { title: string; content: string; index: number }) {
   const [expanded, setExpanded] = useState(index < 3); // First 3 sections expanded by default
   const [copied, setCopied] = useState(false);
@@ -55,7 +87,7 @@ function ProposalSection({ title, content, index }: { title: string; content: st
       {expanded && (
         <div className="p-4 bg-white">
           <div className="prose prose-sm max-w-none">
-            <p className="text-gray-600 whitespace-pre-wrap">{content}</p>
+            <FormattedSectionContent content={content} />
           </div>
           <div className="mt-3 flex justify-end">
             <Button variant="ghost" size="sm" onClick={copyToClipboard}>
