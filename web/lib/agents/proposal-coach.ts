@@ -12,6 +12,17 @@ export function coachProposal(
   const techType = project.technology_type.replace(/_/g, ' ');
   const country = project.country || '';
   const location = project.location_description || country;
+  const cleanLocation = (() => {
+    const normalized = location.trim().replace(/\s+/g, ' ');
+    const withoutLeadIn = normalized
+      .replace(/^(located|situated|based)\s+in\s+/i, '')
+      .replace(/^in\s+/i, '')
+      .replace(/^at\s+/i, '')
+      .replace(/^within\s+/i, '');
+
+    if (!withoutLeadIn) return country || 'the project area';
+    return withoutLeadIn;
+  })();
   const beneficiaries = project.target_beneficiaries || 'target beneficiaries';
   const productiveUses = project.productive_uses || [];
   const capacity = project.capacity_kw;
@@ -42,7 +53,7 @@ export function coachProposal(
   // Generate proposal outline
   const proposalOutline = {
     problem_statement:
-      `Approximately [X] people in ${location} lack access to reliable electricity. ` +
+      `The project site is in ${cleanLocation}, where approximately [X] people lack access to reliable electricity. ` +
       (techType.toLowerCase().includes('health')
         ? 'Health facilities operate without reliable power, affecting service delivery. '
         : 'This energy poverty constrains economic development and quality of life. ') +
