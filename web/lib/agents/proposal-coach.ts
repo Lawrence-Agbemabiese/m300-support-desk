@@ -12,7 +12,12 @@ export function normalizeProblemLocation(
     .replace(/^(in|within|at)\s+/i, '');
 
   if (!withoutLeadIn) return country || 'the project area';
-  return withoutLeadIn;
+
+  // Keep only the first natural sentence segment for readability.
+  const firstSentence = withoutLeadIn.match(/^[\s\S]*?[.!?](?=\s+[A-Z])/);
+  const concise = firstSentence ? firstSentence[0] : withoutLeadIn;
+
+  return concise.replace(/[.!?]\s*$/, '');
 }
 
 export function normalizeLegacyProblemStatement(
