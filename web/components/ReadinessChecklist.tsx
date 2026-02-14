@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
 import { Progress } from '@/components/ui/Progress';
 import type { ProposalCoach, ChecklistItem } from '@/lib/schemas';
@@ -8,7 +9,15 @@ interface ReadinessChecklistProps {
   coach: ProposalCoach;
 }
 
-function ChecklistItemRow({ item }: { item: ChecklistItem }) {
+function ChecklistItemRow({
+  item,
+  expanded,
+  onToggleExpand,
+}: {
+  item: ChecklistItem;
+  expanded: boolean;
+  onToggleExpand: () => void;
+}) {
   const statusColors = {
     ready: 'text-emerald-500',
     not_ready: 'text-red-500',
@@ -47,33 +56,62 @@ function ChecklistItemRow({ item }: { item: ChecklistItem }) {
   };
 
   return (
-    <div
-      className="flex items-start space-x-3 p-3 rounded-lg"
-    >
-      <span className={statusColors[item.status]}>
-        {statusIcons[item.status]}
-      </span>
-      <div className="flex-1">
-        <div className="flex items-center space-x-2">
-          <span className={`text-sm ${item.status === 'ready' ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
-            {item.item}
-          </span>
-          {item.priority && (
-            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${priorityBadges[item.priority]}`}>
-              {item.priority.replace(/_/g, ' ')}
+    <div className="p-3 rounded-lg">
+      <button
+        type="button"
+        onClick={onToggleExpand}
+        className="w-full flex items-start space-x-3 text-left"
+      >
+        <span className={statusColors[item.status]}>
+          {statusIcons[item.status]}
+        </span>
+        <div className="flex-1">
+          <div className="flex items-center space-x-2">
+            <span className={`text-sm ${item.status === 'ready' ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
+              {item.item}
             </span>
+            {item.priority && (
+              <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${priorityBadges[item.priority]}`}>
+                {item.priority.replace(/_/g, ' ')}
+              </span>
+            )}
+          </div>
+        </div>
+        <svg
+          className={`w-4 h-4 text-gray-400 mt-0.5 transition-transform ${expanded ? 'rotate-180' : ''}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {expanded && (
+        <div className="mt-2 pl-8">
+          {item.notes && <p className="text-xs text-gray-600">{item.notes}</p>}
+          {item.status === 'in_progress' && (
+            <p className="text-xs text-blue-700 mt-1">Next step: complete remaining evidence and mark this item complete.</p>
+          )}
+          {item.status === 'not_ready' && (
+            <p className="text-xs text-red-700 mt-1">Next step: this artifact is still missing and is blocking readiness.</p>
+          )}
+          {item.status === 'unknown' && (
+            <p className="text-xs text-gray-600 mt-1">Next step: confirm status and add supporting details/doc links.</p>
           )}
         </div>
-        {item.notes && (
-          <p className="text-xs text-gray-500 mt-1">{item.notes}</p>
-        )}
-      </div>
+      )}
     </div>
   );
 }
 
 export function ReadinessChecklist({ coach }: ReadinessChecklistProps) {
   const checklist = coach.readiness_checklist;
+  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
+
+  const toggleExpanded = (key: string) => {
+    setExpandedItems((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
   const readyCount = coach.readiness_summary?.ready_count ?? checklist.filter((item) => item.status === 'ready').length;
   const notReadyCount = coach.readiness_summary?.not_ready_count ?? checklist.filter((item) => item.status === 'not_ready').length;
   const unknownCount = coach.readiness_summary?.unknown_count ?? checklist.filter((item) => item.status === 'unknown').length;
@@ -146,6 +184,8 @@ export function ReadinessChecklist({ coach }: ReadinessChecklistProps) {
                 <ChecklistItemRow
                   key={`critical-${index}`}
                   item={item}
+                  expanded={Boolean(expandedItems[`critical-${index}-${item.item}`])}
+                  onToggleExpand={() => toggleExpanded(`critical-${index}-${item.item}`)}
                 />
               ))}
             </div>
@@ -166,6 +206,8 @@ export function ReadinessChecklist({ coach }: ReadinessChecklistProps) {
                 <ChecklistItemRow
                   key={`important-${index}`}
                   item={item}
+                  expanded={Boolean(expandedItems[`important-${index}-${item.item}`])}
+                  onToggleExpand={() => toggleExpanded(`important-${index}-${item.item}`)}
                 />
               ))}
             </div>
@@ -186,6 +228,8 @@ export function ReadinessChecklist({ coach }: ReadinessChecklistProps) {
                 <ChecklistItemRow
                   key={`nice-${index}`}
                   item={item}
+                  expanded={Boolean(expandedItems[`nice-${index}-${item.item}`])}
+                  onToggleExpand={() => toggleExpanded(`nice-${index}-${item.item}`)}
                 />
               ))}
             </div>
