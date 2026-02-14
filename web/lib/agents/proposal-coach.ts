@@ -19,6 +19,26 @@ export function coachProposal(
   const readiness = project.readiness_evidence;
   const implementationEvidence = readiness?.implementation_timeline;
 
+  const evidenceSummary = (
+    key: keyof NonNullable<ProjectIntake['readiness_evidence']>,
+    label: string
+  ): string => {
+    const item = readiness?.[key];
+    if (!item) return `${label}: status unknown.`;
+    if (item.status === 'complete') {
+      return item.details?.trim().length ? `${label}: ${item.details.trim()}` : `${label}: complete.`;
+    }
+    if (item.status === 'partial') {
+      return item.details?.trim().length
+        ? `${label}: partial - ${item.details.trim()}`
+        : `${label}: partial - additional work required.`;
+    }
+    if (item.status === 'missing') {
+      return `${label}: missing.`;
+    }
+    return `${label}: status unknown${item.details?.trim().length ? ` - ${item.details.trim()}` : ''}.`;
+  };
+
   // Generate proposal outline
   const proposalOutline = {
     problem_statement:
@@ -28,7 +48,8 @@ export function coachProposal(
         : 'This energy poverty constrains economic development and quality of life. ') +
       (productiveUses.length > 0
         ? `Without electricity, productive activities like ${productiveUses.slice(0, 2).join(', ')} cannot operate at full potential.`
-        : ''),
+        : '') +
+      `\n\nReadiness signal: ${evidenceSummary('demand_assessment', 'Demand assessment')}`,
 
     theory_of_change:
       `IF ${project.project_name} is implemented with ${ownership.replace(/_/g, ' ')} ownership, ` +
@@ -44,7 +65,12 @@ export function coachProposal(
       (ownership === 'community_cooperative'
         ? 'Governance includes: (1) General Assembly meeting quarterly, (2) Elected Management Committee with term limits and gender representation, (3) Trained local operators, (4) Transparent tariff-setting with community input, (5) Revenue allocation with maintenance reserves.'
         : 'Governance arrangements will ensure local participation and accountability.') +
-      ` ${interpretation.community_ownership_justification || ''}`,
+      ` ${interpretation.community_ownership_justification || ''}` +
+      `\n\nReadiness signals:\n` +
+      `- ${evidenceSummary('legal_entity_registration', 'Legal entity registration')}\n` +
+      `- ${evidenceSummary('land_site_documentation', 'Land/site documentation')}\n` +
+      `- ${evidenceSummary('community_stakeholder_endorsement', 'Community/stakeholder endorsement')}\n` +
+      `- ${evidenceSummary('ministry_agency_endorsement', 'Relevant ministry/agency endorsement')}`,
 
     technical_approach:
       `${capacity ? `${capacity}kW` : 'Appropriately sized'} ${techType} system serving ${beneficiaries}. ` +
@@ -53,12 +79,17 @@ export function coachProposal(
         : 'Technical specifications to be finalized. ') +
       (productiveUses.length > 0
         ? `Productive use loads (${productiveUses.slice(0, 2).join(', ')}) integrated into system design.`
-        : ''),
+        : '') +
+      `\n\nReadiness signal: ${evidenceSummary('technical_design', 'Technical design')}`,
 
     affordability_tariff_principles:
-      techType.toLowerCase().includes('health') || ownership === 'public_utility'
+      (techType.toLowerCase().includes('health') || ownership === 'public_utility'
         ? 'N/A - Public infrastructure funded by grant. Operational costs covered by government budget.'
-        : 'Tariff structure designed around ability-to-pay: (1) Lifeline rate for basic consumption, (2) Standard rate for higher usage. Pre-paid metering ensures payment discipline. Tariff review every 2 years with community input.',
+        : 'Tariff structure designed around ability-to-pay: (1) Lifeline rate for basic consumption, (2) Standard rate for higher usage. Pre-paid metering ensures payment discipline. Tariff review every 2 years with community input.') +
+      `\n\nFinancial readiness signals:\n` +
+      `- ${evidenceSummary('detailed_budget', 'Detailed budget')}\n` +
+      `- ${evidenceSummary('financial_projections', 'Financial projections')}\n` +
+      `- ${evidenceSummary('co_financing_documentation', 'Co-financing documentation')}`,
 
     implementation_plan:
       implementationEvidence?.details && implementationEvidence.details.trim().length > 0
@@ -76,7 +107,8 @@ export function coachProposal(
       'Output indicators: Connections completed, capacity installed, system uptime\n' +
       'Outcome indicators: Beneficiary satisfaction, energy expenditure changes, income changes\n' +
       'Data collection: Smart meter analytics, quarterly surveys, annual audit\n' +
-      'Learning: Quarterly reviews, annual case study, sector knowledge sharing',
+      'Learning: Quarterly reviews, annual case study, sector knowledge sharing' +
+      `\n\nReadiness signal: ${evidenceSummary('mel_framework', 'M&E framework')}`,
 
     risk_register:
       'Technical: Equipment failure - mitigated by warranties, service agreements, spare parts\n' +
