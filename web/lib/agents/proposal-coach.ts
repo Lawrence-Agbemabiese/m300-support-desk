@@ -281,7 +281,10 @@ export function coachProposal(
   // Calculate readiness summary
   const ready = readinessChecklist.filter((item) => item.status === 'ready').length;
   const notReady = readinessChecklist.filter((item) => item.status === 'not_ready').length;
-  const unknown = readinessChecklist.filter((item) => item.status === 'unknown').length;
+  // Treat "in_progress" as pending for summary counts.
+  const unknown = readinessChecklist.filter(
+    (item) => item.status === 'unknown' || item.status === 'in_progress'
+  ).length;
 
   let overallReadiness: 'ready_to_submit' | 'nearly_ready' | 'significant_gaps' | 'major_work_needed';
   if (ready >= 8) {

@@ -114,7 +114,9 @@ export function ReadinessChecklist({ coach }: ReadinessChecklistProps) {
   };
   const readyCount = coach.readiness_summary?.ready_count ?? checklist.filter((item) => item.status === 'ready').length;
   const notReadyCount = coach.readiness_summary?.not_ready_count ?? checklist.filter((item) => item.status === 'not_ready').length;
-  const unknownCount = coach.readiness_summary?.unknown_count ?? checklist.filter((item) => item.status === 'unknown').length;
+  const unknownCount =
+    coach.readiness_summary?.unknown_count ??
+    checklist.filter((item) => item.status === 'unknown' || item.status === 'in_progress').length;
   const totalCount = checklist.length;
   const progressPercent = totalCount > 0 ? (readyCount / totalCount) * 100 : 0;
 
