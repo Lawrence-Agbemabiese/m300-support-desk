@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
 import { Progress } from '@/components/ui/Progress';
 import type { ProposalCoach, ChecklistItem } from '@/lib/schemas';
@@ -9,7 +8,7 @@ interface ReadinessChecklistProps {
   coach: ProposalCoach;
 }
 
-function ChecklistItemRow({ item, onToggle }: { item: ChecklistItem; onToggle: () => void }) {
+function ChecklistItemRow({ item }: { item: ChecklistItem }) {
   const statusColors = {
     ready: 'text-emerald-500',
     not_ready: 'text-red-500',
@@ -49,8 +48,7 @@ function ChecklistItemRow({ item, onToggle }: { item: ChecklistItem; onToggle: (
 
   return (
     <div
-      className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-      onClick={onToggle}
+      className="flex items-start space-x-3 p-3 rounded-lg"
     >
       <span className={statusColors[item.status]}>
         {statusIcons[item.status]}
@@ -75,26 +73,12 @@ function ChecklistItemRow({ item, onToggle }: { item: ChecklistItem; onToggle: (
 }
 
 export function ReadinessChecklist({ coach }: ReadinessChecklistProps) {
-  const [checklist, setChecklist] = useState(coach.readiness_checklist);
-
-  const toggleItem = (index: number) => {
-    setChecklist((prev) => {
-      const newList = [...prev];
-      const currentStatus = newList[index].status;
-      // Cycle through statuses: not_ready -> in_progress -> ready -> not_ready
-      const nextStatus =
-        currentStatus === 'not_ready' ? 'in_progress' :
-        currentStatus === 'in_progress' ? 'ready' :
-        currentStatus === 'unknown' ? 'in_progress' :
-        'not_ready';
-      newList[index] = { ...newList[index], status: nextStatus };
-      return newList;
-    });
-  };
-
-  const readyCount = checklist.filter((item) => item.status === 'ready').length;
+  const checklist = coach.readiness_checklist;
+  const readyCount = coach.readiness_summary?.ready_count ?? checklist.filter((item) => item.status === 'ready').length;
+  const notReadyCount = coach.readiness_summary?.not_ready_count ?? checklist.filter((item) => item.status === 'not_ready').length;
+  const unknownCount = coach.readiness_summary?.unknown_count ?? checklist.filter((item) => item.status === 'unknown').length;
   const totalCount = checklist.length;
-  const progressPercent = (readyCount / totalCount) * 100;
+  const progressPercent = totalCount > 0 ? (readyCount / totalCount) * 100 : 0;
 
   const readinessColors = {
     ready_to_submit: 'bg-emerald-100 text-emerald-800',
@@ -134,15 +118,15 @@ export function ReadinessChecklist({ coach }: ReadinessChecklistProps) {
         {coach.readiness_summary && (
           <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
             <div className="text-center">
-              <div className="text-2xl font-bold text-emerald-600">{coach.readiness_summary.ready_count}</div>
+              <div className="text-2xl font-bold text-emerald-600">{readyCount}</div>
               <div className="text-xs text-gray-500">Ready</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-red-600">{coach.readiness_summary.not_ready_count}</div>
+              <div className="text-2xl font-bold text-red-600">{notReadyCount}</div>
               <div className="text-xs text-gray-500">Not Ready</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-gray-400">{coach.readiness_summary.unknown_count}</div>
+              <div className="text-2xl font-bold text-gray-400">{unknownCount}</div>
               <div className="text-xs text-gray-500">Unknown</div>
             </div>
           </div>
@@ -162,10 +146,6 @@ export function ReadinessChecklist({ coach }: ReadinessChecklistProps) {
                 <ChecklistItemRow
                   key={`critical-${index}`}
                   item={item}
-                  onToggle={() => {
-                    const originalIndex = checklist.findIndex((i) => i.item === item.item);
-                    toggleItem(originalIndex);
-                  }}
                 />
               ))}
             </div>
@@ -186,10 +166,6 @@ export function ReadinessChecklist({ coach }: ReadinessChecklistProps) {
                 <ChecklistItemRow
                   key={`important-${index}`}
                   item={item}
-                  onToggle={() => {
-                    const originalIndex = checklist.findIndex((i) => i.item === item.item);
-                    toggleItem(originalIndex);
-                  }}
                 />
               ))}
             </div>
@@ -210,10 +186,6 @@ export function ReadinessChecklist({ coach }: ReadinessChecklistProps) {
                 <ChecklistItemRow
                   key={`nice-${index}`}
                   item={item}
-                  onToggle={() => {
-                    const originalIndex = checklist.findIndex((i) => i.item === item.item);
-                    toggleItem(originalIndex);
-                  }}
                 />
               ))}
             </div>
