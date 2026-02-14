@@ -244,7 +244,7 @@ export const ProposalCoachSchema = z.object({
   target_funder: z.string(),
   proposal_outline: ProposalOutlineSchema,
   readiness_checklist: z.array(ChecklistItemSchema).min(5),
-  missing_info_questionnaire: z.array(z.string()).min(5),
+  missing_info_questionnaire: z.array(z.string()),
   readiness_summary: ReadinessSummarySchema.optional(),
   funder_specific_guidance: FunderSpecificGuidance.optional(),
   debt_sensitivity_statement: z.string().min(50).optional(),

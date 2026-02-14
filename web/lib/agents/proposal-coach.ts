@@ -165,27 +165,81 @@ export function coachProposal(
     },
   ];
 
-  // Generate missing info questionnaire
-  const missingInfo = [
-    `What is the exact location (GPS coordinates) of the project site?`,
-    `What is the registration number of the ${ownership.replace(/_/g, ' ')} entity?`,
-    `What is the current energy situation? (grid access, diesel/kerosene expenditure)`,
-    `What community contribution is committed? (amount, cash vs in-kind)`,
-    `Has any technical feasibility study been conducted?`,
-    `What is the governance structure? (committee composition, decision-making)`,
-    `What permits are required and what is their status?`,
-    `Who is the primary contact person?`,
-  ];
+  // Generate targeted missing-info questionnaire (only ask what is incomplete/unclear)
+  const missingInfoSet = new Set<string>();
+  const addQuestion = (question: string | undefined) => {
+    if (!question) return;
+    const clean = question.trim();
+    if (clean.length > 0) missingInfoSet.add(clean);
+  };
 
-  if (productiveUses.length > 0) {
-    missingInfo.push(
-      `What is the status of productive use anchor(s)? (${productiveUses.slice(0, 2).join(', ')})`
+  const readinessQuestionMap = {
+    legal_entity_registration: 'Legal entity registration',
+    land_site_documentation: 'Land/site documentation',
+    community_stakeholder_endorsement: 'Community/stakeholder endorsement',
+    ministry_agency_endorsement: 'Relevant ministry/agency endorsement',
+    demand_assessment: 'Demand assessment',
+    technical_design: 'Technical design',
+    detailed_budget: 'Detailed budget',
+    financial_projections: 'Financial projections',
+    co_financing_documentation: 'Co-financing documentation',
+    implementation_timeline: 'Implementation timeline',
+    mel_framework: 'M&E framework',
+  } as const;
+
+  if (readiness) {
+    for (const [key, label] of Object.entries(readinessQuestionMap)) {
+      const item = readiness[key as keyof typeof readiness];
+      if (!item || item.status === 'complete') continue;
+
+      if (item.status === 'partial') {
+        addQuestion(
+          `${label}: what remains to finalize this item before submission?` +
+          (item.details ? ` (Current note: ${item.details})` : '')
+        );
+      } else {
+        addQuestion(
+          `${label}: provide status and supporting evidence/reference (document name or link).`
+        );
+      }
+    }
+  } else {
+    // Backward compatibility for older inputs without readiness evidence
+    addQuestion('Provide status and evidence for legal entity registration.');
+    addQuestion('Provide status and evidence for land/site documentation.');
+    addQuestion('Provide status and evidence for community/stakeholder endorsement.');
+    addQuestion('Provide status and evidence for demand assessment.');
+    addQuestion('Provide status and evidence for technical design and budget.');
+  }
+
+  // Ask only if information is not already supplied in intake
+  if (!project.contact_info?.name || !project.contact_info?.email) {
+    addQuestion('Who is the primary contact person (name, role, and email)?');
+  }
+
+  if (!capacity) {
+    addQuestion('What is the planned installed capacity (kW) and key load assumptions?');
+  }
+
+  if (!project.existing_funding && readiness?.co_financing_documentation?.status !== 'complete') {
+    addQuestion('What co-financing (cash/in-kind) has been committed, by whom, and with what proof?');
+  }
+
+  if (!project.additional_context || !/(permit|license|approval)/i.test(project.additional_context)) {
+    addQuestion('What permits/approvals are required and what is the timeline/status for each?');
+  }
+
+  if (productiveUses.length > 0 && readiness?.demand_assessment?.status !== 'complete') {
+    addQuestion(
+      `For productive uses (${productiveUses.slice(0, 2).join(', ')}), what demand evidence is available (off-taker, baseline usage, projected kWh)?`
     );
   }
-  if (ownership === 'community_cooperative') {
-    missingInfo.push('How many registered members does the cooperative have?');
-    missingInfo.push("What is the cooperative's track record?");
+
+  if (ownership === 'community_cooperative' && (!project.community_engagement || project.community_engagement.length < 40)) {
+    addQuestion('For the cooperative, provide member count, governance structure, and decision-making process.');
   }
+
+  const missingInfo = Array.from(missingInfoSet);
 
   // Calculate readiness summary
   const ready = readinessChecklist.filter((item) => item.status === 'ready').length;
