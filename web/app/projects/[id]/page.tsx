@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { PolicyResults } from '@/components/PolicyResults';
 import { GrantMatches } from '@/components/GrantMatches';
 import { ProposalOutline } from '@/components/ProposalOutline';
@@ -10,6 +11,7 @@ import { PDFDownloadButton } from '@/components/PDFDownloadButton';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
 import type { AnalysisResult } from '@/lib/schemas';
+import { useAuth } from '@/lib/auth-context';
 
 interface ProjectDetail {
   id: string;
@@ -47,6 +49,8 @@ const statusOptions = [
 ];
 
 export default function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const router = useRouter();
+  const { advisor, loading: authLoading } = useAuth();
   const { id } = use(params);
   const [project, setProject] = useState<ProjectDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -55,6 +59,12 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
   const [editingNotes, setEditingNotes] = useState(false);
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && !advisor) {
+      router.push('/login');
+    }
+  }, [advisor, authLoading, router]);
 
   const fetchProject = useCallback(async () => {
     try {
@@ -76,8 +86,20 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
   }, [id]);
 
   useEffect(() => {
-    fetchProject();
-  }, [fetchProject]);
+    if (advisor) {
+      fetchProject();
+    }
+  }, [advisor, fetchProject]);
+
+  if (authLoading || !advisor) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
+        </div>
+      </div>
+    );
+  }
 
   const updateStatus = async (newStatus: string) => {
     setSaving(true);

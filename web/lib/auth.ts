@@ -3,8 +3,21 @@ import jwt from 'jsonwebtoken';
 import { cookies } from 'next/headers';
 import { prisma } from './db';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'm300-support-desk-secret-key-change-in-production';
 const COOKIE_NAME = 'm300_auth_token';
+
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+
+  if (secret && secret.trim().length > 0) {
+    return secret;
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET is not configured');
+  }
+
+  return 'm300-support-desk-dev-secret';
+}
 
 export interface AdvisorPayload {
   id: string;
@@ -22,12 +35,12 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 }
 
 export function createToken(advisor: AdvisorPayload): string {
-  return jwt.sign(advisor, JWT_SECRET, { expiresIn: '7d' });
+  return jwt.sign(advisor, getJwtSecret(), { expiresIn: '7d' });
 }
 
 export function verifyToken(token: string): AdvisorPayload | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as AdvisorPayload;
+    return jwt.verify(token, getJwtSecret()) as AdvisorPayload;
   } catch {
     return null;
   }

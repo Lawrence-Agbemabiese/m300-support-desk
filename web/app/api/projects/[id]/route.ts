@@ -4,16 +4,34 @@ import { getServerSession } from '@/lib/auth';
 import { normalizeLegacyProblemStatement } from '@/lib/agents/proposal-coach';
 import type { AnalysisResult, ProjectIntake, PolicyInterpretation, GrantMatchResult, ProposalCoach, TradeOffExplorerResult } from '@/lib/schemas';
 
+function buildProjectScope(id: string, session: { id: string; role: string }) {
+  if (session.role === 'admin') {
+    return { id };
+  }
+  return {
+    id,
+    advisorId: session.id,
+  };
+}
+
 // GET /api/projects/[id] - Get single project with full details
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const session = await getServerSession();
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
     const { id } = await params;
 
-    const project = await prisma.project.findUnique({
-      where: { id },
+    const project = await prisma.project.findFirst({
+      where: buildProjectScope(id, session),
       include: {
         advisor: {
           select: {
@@ -114,6 +132,14 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const session = await getServerSession();
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
     const { id } = await params;
     const body = await request.json();
 
@@ -130,6 +156,18 @@ export async function PATCH(
       return NextResponse.json(
         { error: 'No valid fields to update' },
         { status: 400 }
+      );
+    }
+
+    const visibleProject = await prisma.project.findFirst({
+      where: buildProjectScope(id, session),
+      select: { id: true },
+    });
+
+    if (!visibleProject) {
+      return NextResponse.json(
+        { error: 'Project not found' },
+        { status: 404 }
       );
     }
 
@@ -160,7 +198,27 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const session = await getServerSession();
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
     const { id } = await params;
+
+    const visibleProject = await prisma.project.findFirst({
+      where: buildProjectScope(id, session),
+      select: { id: true },
+    });
+
+    if (!visibleProject) {
+      return NextResponse.json(
+        { error: 'Project not found' },
+        { status: 404 }
+      );
+    }
 
     await prisma.project.delete({
       where: { id },

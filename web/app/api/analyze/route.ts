@@ -13,6 +13,14 @@ export async function POST(request: NextRequest) {
   const startTime = Date.now();
 
   try {
+    const session = await getServerSession();
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
 
     // Parse and validate project intake
@@ -70,9 +78,6 @@ export async function POST(request: NextRequest) {
 
     const processingTime = Date.now() - startTime;
 
-    // Get current advisor session (if logged in)
-    const session = await getServerSession();
-
     // Save to database
     const savedProject = await prisma.project.create({
       // Cast to any to remain compatible until Prisma client is regenerated with new column
@@ -101,7 +106,7 @@ export async function POST(request: NextRequest) {
         topFunderScore: grants.matches[0]?.fit_score,
         enhanced: Boolean(modelUsed),
         processingTimeMs: processingTime,
-        advisorId: session?.id || null,
+        advisorId: session.id,
       } as any,
     });
 

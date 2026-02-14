@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { ProjectIntakeForm } from '@/components/ProjectIntakeForm';
 import { PolicyResults } from '@/components/PolicyResults';
 import { GrantMatches } from '@/components/GrantMatches';
@@ -10,14 +11,23 @@ import { PDFDownloadButton } from '@/components/PDFDownloadButton';
 import { Button } from '@/components/ui/Button';
 import { TradeOffExplorer } from '@/components/TradeOffExplorer';
 import type { AnalysisResult, ProjectIntake } from '@/lib/schemas';
+import { useAuth } from '@/lib/auth-context';
 
 type ViewTab = 'policy' | 'tradeoffs' | 'grants' | 'proposal' | 'checklist';
 
 export default function AnalyzePage() {
+  const router = useRouter();
+  const { advisor, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [activeTab, setActiveTab] = useState<ViewTab>('policy');
+
+  useEffect(() => {
+    if (!authLoading && !advisor) {
+      router.push('/login');
+    }
+  }, [advisor, authLoading, router]);
 
   const handleSubmit = async (
     data: ProjectIntake,
@@ -70,6 +80,16 @@ export default function AnalyzePage() {
     { id: 'proposal', label: 'Proposal Outline' },
     { id: 'checklist', label: 'Readiness Checklist' },
   ];
+
+  if (authLoading || !advisor) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
+        </div>
+      </div>
+    );
+  }
 
   if (!result) {
     return (

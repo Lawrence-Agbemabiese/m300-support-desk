@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/lib/auth-context';
@@ -55,7 +56,8 @@ const tierColors: Record<string, string> = {
 };
 
 export default function ProjectsPage() {
-  const { advisor } = useAuth();
+  const router = useRouter();
+  const { advisor, loading: authLoading } = useAuth();
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -95,8 +97,25 @@ export default function ProjectsPage() {
   }, [advisor, filter, myProjectsOnly]);
 
   useEffect(() => {
-    fetchProjects();
-  }, [fetchProjects]);
+    if (!authLoading && !advisor) {
+      router.push('/login');
+      return;
+    }
+
+    if (advisor) {
+      fetchProjects();
+    }
+  }, [advisor, authLoading, fetchProjects, router]);
+
+  if (authLoading || !advisor) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
+        </div>
+      </div>
+    );
+  }
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-GB', {
