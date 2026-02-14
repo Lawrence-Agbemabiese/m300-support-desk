@@ -4,6 +4,7 @@ import { verifyPassword, createToken, setAuthCookie } from '@/lib/auth';
 import { cookies } from 'next/headers';
 import { z } from 'zod';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import { rejectIfCrossOrigin } from '@/lib/request-security';
 
 const LoginSchema = z.object({
   email: z.string().email().transform((value) => value.trim().toLowerCase()),
@@ -12,6 +13,9 @@ const LoginSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    const originError = rejectIfCrossOrigin(request);
+    if (originError) return originError;
+
     const ip = getClientIp(request);
     const ipLimit = checkRateLimit(`auth-login:ip:${ip}`, {
       max: 30,

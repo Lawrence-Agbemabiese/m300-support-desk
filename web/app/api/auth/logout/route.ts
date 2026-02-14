@@ -1,8 +1,13 @@
 import { NextResponse } from 'next/server';
 import { clearAuthCookie } from '@/lib/auth';
 import { cookies } from 'next/headers';
+import { NextRequest } from 'next/server';
+import { rejectIfCrossOrigin } from '@/lib/request-security';
 
-export async function POST() {
+export async function POST(request: NextRequest) {
+  const originError = rejectIfCrossOrigin(request);
+  if (originError) return originError;
+
   const cookieStore = await cookies();
   const cookie = clearAuthCookie();
   cookieStore.set(cookie.name, cookie.value, cookie);

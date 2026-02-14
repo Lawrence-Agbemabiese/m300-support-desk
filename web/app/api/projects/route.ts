@@ -1,6 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getServerSession } from '@/lib/auth';
+import { z } from 'zod';
+
+const statusValues = ['submitted', 'in_review', 'approved', 'needs_info', 'archived'] as const;
+const ProjectsQuerySchema = z.object({
+  status: z.enum(statusValues).optional(),
+  country: z.string().trim().min(2).max(120).optional(),
+  myProjects: z.boolean().optional(),
+  limit: z.preprocess(
+    (value) => (value === undefined ? 50 : Number(value)),
+    z.number().int().min(1).max(100)
+  ),
+  offset: z.preprocess(
+    (value) => (value === undefined ? 0 : Number(value)),
+    z.number().int().min(0)
+  ),
+});
 
 // GET /api/projects - List all projects
 export async function GET(request: NextRequest) {
@@ -14,13 +30,20 @@ export async function GET(request: NextRequest) {
     }
 
     const searchParams = request.nextUrl.searchParams;
-    const status = searchParams.get('status');
-    const country = searchParams.get('country');
-    const myProjects = searchParams.get('my_projects') === 'true';
-    const parsedLimit = parseInt(searchParams.get('limit') || '50', 10);
-    const parsedOffset = parseInt(searchParams.get('offset') || '0', 10);
-    const limit = Number.isFinite(parsedLimit) ? Math.min(Math.max(parsedLimit, 1), 100) : 50;
-    const offset = Number.isFinite(parsedOffset) ? Math.max(parsedOffset, 0) : 0;
+    const parsed = ProjectsQuerySchema.safeParse({
+      status: searchParams.get('status') || undefined,
+      country: searchParams.get('country') || undefined,
+      myProjects: searchParams.get('my_projects') === 'true',
+      limit: searchParams.get('limit') ?? undefined,
+      offset: searchParams.get('offset') ?? undefined,
+    });
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid query parameters' },
+        { status: 400 }
+      );
+    }
+    const { status, country, myProjects, limit, offset } = parsed.data;
 
     const where: Record<string, unknown> = {};
     if (status) where.status = status;

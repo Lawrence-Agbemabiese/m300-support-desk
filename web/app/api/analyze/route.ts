@@ -8,16 +8,44 @@ import { enhanceNarrative, isConfigured } from '@/lib/llm/client';
 import { M300_SYSTEM_PROMPT, getPolicyEnhancementPrompt } from '@/lib/llm/prompts';
 import { prisma } from '@/lib/db';
 import { getServerSession } from '@/lib/auth';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import { rejectIfCrossOrigin } from '@/lib/request-security';
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
 
   try {
+    const originError = rejectIfCrossOrigin(request);
+    if (originError) return originError;
+
+    const ip = getClientIp(request);
+    const ipLimit = checkRateLimit(`analyze:ip:${ip}`, {
+      max: 40,
+      windowMs: 10 * 60 * 1000,
+    });
+    if (!ipLimit.allowed) {
+      return NextResponse.json(
+        { error: 'Too many analysis requests. Please try again later.' },
+        { status: 429 }
+      );
+    }
+
     const session = await getServerSession();
     if (!session) {
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
+      );
+    }
+
+    const userLimit = checkRateLimit(`analyze:user:${session.id}`, {
+      max: 20,
+      windowMs: 10 * 60 * 1000,
+    });
+    if (!userLimit.allowed) {
+      return NextResponse.json(
+        { error: 'Too many analysis requests. Please try again later.' },
+        { status: 429 }
       );
     }
 

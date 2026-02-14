@@ -3,6 +3,9 @@ import { ProjectIntakeSchema, PolicyInterpretationSchema, GrantMatchSchema } fro
 import { interpretPolicy } from '@/lib/agents/policy-interpreter';
 import { matchGrants } from '@/lib/agents/grant-matcher';
 import { coachProposal } from '@/lib/agents/proposal-coach';
+import { getServerSession } from '@/lib/auth';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import { rejectIfCrossOrigin } from '@/lib/request-security';
 
 interface CoachRequestBody {
   project: unknown;
@@ -12,6 +15,33 @@ interface CoachRequestBody {
 
 export async function POST(request: NextRequest) {
   try {
+    const originError = rejectIfCrossOrigin(request);
+    if (originError) return originError;
+
+    const session = await getServerSession();
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    const ip = getClientIp(request);
+    const ipLimit = checkRateLimit(`coach:ip:${ip}`, {
+      max: 60,
+      windowMs: 10 * 60 * 1000,
+    });
+    const userLimit = checkRateLimit(`coach:user:${session.id}`, {
+      max: 30,
+      windowMs: 10 * 60 * 1000,
+    });
+    if (!ipLimit.allowed || !userLimit.allowed) {
+      return NextResponse.json(
+        { error: 'Too many proposal coach requests. Please try again later.' },
+        { status: 429 }
+      );
+    }
+
     const body: CoachRequestBody = await request.json();
 
     // Parse and validate project intake

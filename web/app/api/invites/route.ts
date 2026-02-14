@@ -5,6 +5,7 @@ import { randomBytes } from 'crypto';
 import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import { rejectIfCrossOrigin } from '@/lib/request-security';
 
 // Generate a readable invite code
 function generateInviteCode(): string {
@@ -28,6 +29,10 @@ const CreateInviteSchema = z.object({
     (value) => (value === '' || value === undefined || value === null ? 1 : Number(value)),
     z.number().int().min(1).max(20)
   ),
+});
+
+const DeleteInviteQuerySchema = z.object({
+  id: z.string().cuid(),
 });
 
 // GET - List all invites (admin only)
@@ -59,6 +64,9 @@ export async function GET() {
 // POST - Create new invite (admin only)
 export async function POST(request: NextRequest) {
   try {
+    const originError = rejectIfCrossOrigin(request);
+    if (originError) return originError;
+
     const session = await getServerSession();
 
     if (!session || session.role !== 'admin') {
@@ -140,6 +148,9 @@ export async function POST(request: NextRequest) {
 // DELETE - Revoke an invite (admin only)
 export async function DELETE(request: NextRequest) {
   try {
+    const originError = rejectIfCrossOrigin(request);
+    if (originError) return originError;
+
     const session = await getServerSession();
 
     if (!session || session.role !== 'admin') {
@@ -150,14 +161,16 @@ export async function DELETE(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
-
-    if (!id) {
+    const parsed = DeleteInviteQuerySchema.safeParse({
+      id: searchParams.get('id'),
+    });
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Invite ID required' },
+        { error: 'Valid invite ID required' },
         { status: 400 }
       );
     }
+    const { id } = parsed.data;
 
     await prisma.invite.delete({
       where: { id },

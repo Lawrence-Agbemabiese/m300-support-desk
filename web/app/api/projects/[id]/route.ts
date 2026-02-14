@@ -3,6 +3,13 @@ import { prisma } from '@/lib/db';
 import { getServerSession } from '@/lib/auth';
 import { normalizeLegacyProblemStatement } from '@/lib/agents/proposal-coach';
 import type { AnalysisResult, ProjectIntake, PolicyInterpretation, GrantMatchResult, ProposalCoach, TradeOffExplorerResult } from '@/lib/schemas';
+import { z } from 'zod';
+import { rejectIfCrossOrigin } from '@/lib/request-security';
+
+const ProjectUpdateSchema = z.object({
+  status: z.enum(['submitted', 'in_review', 'approved', 'needs_info', 'archived']).optional(),
+  advisorNotes: z.string().max(5000).optional(),
+});
 
 function buildProjectScope(id: string, session: { id: string; role: string }) {
   if (session.role === 'admin') {
@@ -132,6 +139,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const originError = rejectIfCrossOrigin(request);
+    if (originError) return originError;
+
     const session = await getServerSession();
     if (!session) {
       return NextResponse.json(
@@ -142,15 +152,14 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await request.json();
-
-    const allowedFields = ['status', 'advisorNotes'];
-    const updateData: Record<string, string> = {};
-
-    for (const field of allowedFields) {
-      if (body[field] !== undefined) {
-        updateData[field] = body[field];
-      }
+    const parsed = ProjectUpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid project update payload' },
+        { status: 400 }
+      );
     }
+    const updateData = parsed.data;
 
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json(
@@ -198,6 +207,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const originError = rejectIfCrossOrigin(request);
+    if (originError) return originError;
+
     const session = await getServerSession();
     if (!session) {
       return NextResponse.json(

@@ -52,17 +52,19 @@ IMPORTANT:
 // Protected by a secret key for security
 export async function POST(request: NextRequest) {
   try {
-    // Verify secret key for scheduled calls
-    // Supports both Bearer token (manual calls) and Vercel Cron header
+    // Verify shared secret for scheduled calls
     const authHeader = request.headers.get('authorization');
-    const vercelCronHeader = request.headers.get('x-vercel-cron');
     const cronSecret = process.env.CRON_SECRET;
 
-    // Allow Vercel Cron (automatically authenticated by Vercel)
-    const isVercelCron = vercelCronHeader === '1';
-    const isValidBearerToken = authHeader === `Bearer ${cronSecret}`;
+    if (!cronSecret || cronSecret.trim().length < 20) {
+      return NextResponse.json(
+        { error: 'CRON_SECRET is not configured securely' },
+        { status: 500 }
+      );
+    }
 
-    if (!isVercelCron && !isValidBearerToken) {
+    const isValidBearerToken = authHeader === `Bearer ${cronSecret}`;
+    if (!isValidBearerToken) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -189,10 +191,8 @@ export async function POST(request: NextRequest) {
 
 // GET - Info about scheduled search configuration
 export async function GET() {
-  return NextResponse.json({
-    message: 'Scheduled Grant Search Endpoint',
-    description: 'POST to this endpoint with Bearer token to trigger a scheduled search',
-    searches: SCHEDULED_SEARCHES.length,
-    regions: [...new Set(SCHEDULED_SEARCHES.map(s => s.region))],
-  });
+  return NextResponse.json(
+    { error: 'Method not allowed' },
+    { status: 405 }
+  );
 }
