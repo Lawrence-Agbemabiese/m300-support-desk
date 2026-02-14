@@ -17,6 +17,7 @@ export function coachProposal(
   const capacity = project.capacity_kw;
   const existingFunding = project.existing_funding || '';
   const readiness = project.readiness_evidence;
+  const implementationEvidence = readiness?.implementation_timeline;
 
   // Generate proposal outline
   const proposalOutline = {
@@ -60,12 +61,16 @@ export function coachProposal(
         : 'Tariff structure designed around ability-to-pay: (1) Lifeline rate for basic consumption, (2) Standard rate for higher usage. Pre-paid metering ensures payment discipline. Tariff review every 2 years with community input.',
 
     implementation_plan:
-      'Phased implementation:\n' +
-      '- Month 1-2: Detailed design, procurement, community mobilization\n' +
-      '- Month 3-4: Site preparation, procurement finalization\n' +
-      '- Month 5-6: Equipment installation and commissioning\n' +
-      '- Month 7-8: Connections, training, operational handover\n' +
-      '- Month 9-12: Performance monitoring, optimization, documentation',
+      implementationEvidence?.details && implementationEvidence.details.trim().length > 0
+        ? implementationEvidence.status === 'complete'
+          ? implementationEvidence.details.trim()
+          : `${implementationEvidence.details.trim()}\n\nStatus: ${implementationEvidence.status.replace('_', ' ')}. Please finalize any remaining dependencies and milestone dates before submission.`
+        : 'Phased implementation:\n' +
+          '- Month 1-2: Detailed design, procurement, community mobilization\n' +
+          '- Month 3-4: Site preparation, procurement finalization\n' +
+          '- Month 5-6: Equipment installation and commissioning\n' +
+          '- Month 7-8: Connections, training, operational handover\n' +
+          '- Month 9-12: Performance monitoring, optimization, documentation',
 
     mel_framework:
       'Output indicators: Connections completed, capacity installed, system uptime\n' +
