@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ProjectIntakeSchema } from '@/lib/schemas';
 import { matchGrants } from '@/lib/agents/grant-matcher';
+import { requireAuth } from '@/lib/access-control';
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAuth();
+    if (!auth.ok) return auth.response;
+
     const body = await request.json();
 
     // Parse and validate project intake

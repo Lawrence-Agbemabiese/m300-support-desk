@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { getServerSession } from '@/lib/auth';
+import { requireAdmin } from '@/lib/access-control';
 
 // GET - Get single discovered grant
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const admin = await requireAdmin();
+    if (!admin.ok) return admin.response;
+
     const { id } = await params;
 
     const grant = await prisma.discoveredGrant.findUnique({
@@ -37,14 +40,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession();
-
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
+    const admin = await requireAdmin();
+    if (!admin.ok) return admin.response;
+    const { session } = admin;
 
     const { id } = await params;
     const body = await request.json();
@@ -79,18 +77,12 @@ export async function PATCH(
 
 // DELETE - Delete discovered grant
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession();
-
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
+    const admin = await requireAdmin();
+    if (!admin.ok) return admin.response;
 
     const { id } = await params;
 

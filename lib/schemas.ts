@@ -50,6 +50,27 @@ export const ContactInfoSchema = z.object({
   phone: z.string().optional(),
 });
 
+export const ReadinessEvidenceStatus = z.enum(['complete', 'partial', 'missing', 'unknown']);
+
+export const ReadinessEvidenceItemSchema = z.object({
+  status: ReadinessEvidenceStatus,
+  details: z.string().optional(),
+});
+
+export const ReadinessEvidenceSchema = z.object({
+  legal_entity_registration: ReadinessEvidenceItemSchema,
+  land_site_documentation: ReadinessEvidenceItemSchema,
+  community_stakeholder_endorsement: ReadinessEvidenceItemSchema,
+  ministry_agency_endorsement: ReadinessEvidenceItemSchema,
+  demand_assessment: ReadinessEvidenceItemSchema,
+  technical_design: ReadinessEvidenceItemSchema,
+  detailed_budget: ReadinessEvidenceItemSchema,
+  financial_projections: ReadinessEvidenceItemSchema,
+  co_financing_documentation: ReadinessEvidenceItemSchema,
+  implementation_timeline: ReadinessEvidenceItemSchema,
+  mel_framework: ReadinessEvidenceItemSchema,
+});
+
 export const ProjectIntakeSchema = z.object({
   project_name: z.string().min(3).max(200),
   country: z.string().min(2),
@@ -66,6 +87,7 @@ export const ProjectIntakeSchema = z.object({
   additional_context: z.string().optional(),
   contact_info: ContactInfoSchema.optional(),
   debt_preference: DebtPreference.default('grant_preferred'),
+  readiness_evidence: ReadinessEvidenceSchema.optional(),
 });
 
 export type ProjectIntake = z.infer<typeof ProjectIntakeSchema>;
@@ -222,7 +244,7 @@ export const ProposalCoachSchema = z.object({
   target_funder: z.string(),
   proposal_outline: ProposalOutlineSchema,
   readiness_checklist: z.array(ChecklistItemSchema).min(5),
-  missing_info_questionnaire: z.array(z.string()).min(5),
+  missing_info_questionnaire: z.array(z.string()),
   readiness_summary: ReadinessSummarySchema.optional(),
   funder_specific_guidance: FunderSpecificGuidance.optional(),
   debt_sensitivity_statement: z.string().min(50).optional(),
@@ -230,6 +252,28 @@ export const ProposalCoachSchema = z.object({
 });
 
 export type ProposalCoach = z.infer<typeof ProposalCoachSchema>;
+
+// ============================================================================
+// Policy Trade-Off Explorer Schema
+// ============================================================================
+
+export const TradeOffScenarioSchema = z.object({
+  title: z.string(),
+  description: z.string(),
+  upsides: z.array(z.string()),
+  risks: z.array(z.string()),
+  signals_to_monitor: z.array(z.string()),
+  suggested_actions: z.array(z.string()),
+});
+
+export const TradeOffExplorerSchema = z.object({
+  sensitivity_drivers: z.array(z.string()),
+  priority_trade_offs: z.array(TradeOffScenarioSchema),
+  bottom_line: z.string(),
+});
+
+export type TradeOffScenario = z.infer<typeof TradeOffScenarioSchema>;
+export type TradeOffExplorerResult = z.infer<typeof TradeOffExplorerSchema>;
 
 // ============================================================================
 // Combined Analysis Result
@@ -240,6 +284,7 @@ export const AnalysisResultSchema = z.object({
   policy: PolicyInterpretationSchema,
   grants: GrantMatchSchema,
   coach: ProposalCoachSchema,
+  tradeoffs: TradeOffExplorerSchema.optional(),
   metadata: z.object({
     enhanced: z.boolean(),
     model: z.string().optional(),

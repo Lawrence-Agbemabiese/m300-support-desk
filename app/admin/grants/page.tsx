@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { Button } from '@/components/ui/Button';
 import { Input, Textarea } from '@/components/ui/Input';
@@ -51,6 +51,7 @@ const statusColors: Record<string, string> = {
 
 export default function AdminGrantsPage() {
   const { advisor, loading: authLoading } = useAuth();
+  const canAccess = advisor?.role === 'admin';
   const [grants, setGrants] = useState<DiscoveredGrant[]>([]);
   const [searches, setSearches] = useState<SearchHistory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,14 +68,7 @@ export default function AdminGrantsPage() {
   const [reviewNotes, setReviewNotes] = useState('');
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    if (advisor) {
-      fetchGrants();
-      fetchSearchHistory();
-    }
-  }, [advisor, filter]);
-
-  const fetchGrants = async () => {
+  const fetchGrants = useCallback(async () => {
     try {
       const response = await fetch(`/api/grants/discovered?status=${filter}`);
       const data = await response.json();
@@ -84,9 +78,9 @@ export default function AdminGrantsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
 
-  const fetchSearchHistory = async () => {
+  const fetchSearchHistory = useCallback(async () => {
     try {
       const response = await fetch('/api/grants/discover');
       const data = await response.json();
@@ -94,7 +88,14 @@ export default function AdminGrantsPage() {
     } catch (err) {
       console.error('Failed to fetch search history');
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (canAccess) {
+      fetchGrants();
+      fetchSearchHistory();
+    }
+  }, [canAccess, fetchGrants, fetchSearchHistory]);
 
   const runSearch = async () => {
     if (!searchQuery.trim()) return;
@@ -186,6 +187,18 @@ export default function AdminGrantsPage() {
         <Card>
           <CardContent className="py-12 text-center">
             <p className="text-gray-600">Please log in to access grant discovery.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!canAccess) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <Card>
+          <CardContent className="py-12 text-center">
+            <p className="text-gray-600">Admin access required to manage grant discovery.</p>
           </CardContent>
         </Card>
       </div>

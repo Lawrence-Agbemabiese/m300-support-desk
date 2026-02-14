@@ -47,7 +47,7 @@ export function Header() {
               >
                 Projects
               </Link>
-              {advisor && (
+              {advisor?.role === 'admin' && (
                 <>
                   <Link
                     href="/admin/grants"
@@ -55,14 +55,18 @@ export function Header() {
                   >
                     Grant Discovery
                   </Link>
-                  {advisor.role === 'admin' && (
-                    <Link
-                      href="/admin/invites"
-                      className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium"
-                    >
-                      Invites
-                    </Link>
-                  )}
+                  <Link
+                    href="/admin/invites"
+                    className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium"
+                  >
+                    Invites
+                  </Link>
+                  <Link
+                    href="/admin/users"
+                    className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium"
+                  >
+                    Users
+                  </Link>
                 </>
               )}
             </nav>

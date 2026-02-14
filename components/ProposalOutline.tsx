@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import type { ProposalCoach } from '@/lib/schemas';
@@ -20,8 +20,51 @@ const sectionLabels: Record<string, string> = {
   risk_register: 'Risk Register',
 };
 
-function ProposalSection({ title, content, index }: { title: string; content: string; index: number }) {
-  const [expanded, setExpanded] = useState(index < 3); // First 3 sections expanded by default
+function FormattedSectionContent({ content }: { content: string }) {
+  const cleaned = content.trim().replace(/^"+|"+$/g, '');
+  const lines = cleaned
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+
+  const hasBullets = lines.some((line) => line.startsWith('- '));
+
+  if (!hasBullets) {
+    return <p className="text-gray-600 whitespace-pre-wrap">{cleaned}</p>;
+  }
+
+  const introLines = lines.filter((line) => !line.startsWith('- '));
+  const bulletLines = lines.filter((line) => line.startsWith('- ')).map((line) => line.slice(2).trim());
+
+  return (
+    <div className="space-y-2">
+      {introLines.map((line, idx) => (
+        <p key={`intro-${idx}`} className="text-gray-600">
+          {line}
+        </p>
+      ))}
+      <ul className="list-disc list-inside space-y-1 text-gray-600">
+        {bulletLines.map((line, idx) => (
+          <li key={`bullet-${idx}`}>{line}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function ProposalSection({
+  title,
+  content,
+  index,
+  expanded,
+  onToggle,
+}: {
+  title: string;
+  content: string;
+  index: number;
+  expanded: boolean;
+  onToggle: () => void;
+}) {
   const [copied, setCopied] = useState(false);
 
   const copyToClipboard = async () => {
@@ -34,7 +77,7 @@ function ProposalSection({ title, content, index }: { title: string; content: st
     <div className="border border-gray-200 rounded-lg overflow-hidden">
       <button
         className="w-full px-4 py-3 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
-        onClick={() => setExpanded(!expanded)}
+        onClick={onToggle}
       >
         <div className="flex items-center space-x-3">
           <span className="flex-shrink-0 w-6 h-6 bg-emerald-100 text-emerald-800 rounded-full flex items-center justify-center text-sm font-medium">
@@ -55,7 +98,7 @@ function ProposalSection({ title, content, index }: { title: string; content: st
       {expanded && (
         <div className="p-4 bg-white">
           <div className="prose prose-sm max-w-none">
-            <p className="text-gray-600 whitespace-pre-wrap">{content}</p>
+            <FormattedSectionContent content={content} />
           </div>
           <div className="mt-3 flex justify-end">
             <Button variant="ghost" size="sm" onClick={copyToClipboard}>
@@ -69,13 +112,40 @@ function ProposalSection({ title, content, index }: { title: string; content: st
 }
 
 export function ProposalOutline({ coach }: ProposalOutlineProps) {
-  const [expandAll, setExpandAll] = useState(false);
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
 
-  const sections = Object.entries(coach.proposal_outline).map(([key, content]) => ({
-    key,
-    title: sectionLabels[key] || key.replace(/_/g, ' '),
-    content,
-  }));
+  const sections = useMemo(
+    () =>
+      Object.entries(coach.proposal_outline).map(([key, content]) => ({
+        key,
+        title: sectionLabels[key] || key.replace(/_/g, ' '),
+        content,
+      })),
+    [coach.proposal_outline]
+  );
+
+  useEffect(() => {
+    const initialExpanded: Record<string, boolean> = {};
+    sections.forEach((section, index) => {
+      initialExpanded[section.key] = index < 3;
+    });
+    setExpandedSections(initialExpanded);
+  }, [sections]);
+
+  const allExpanded = sections.every((section) => expandedSections[section.key]);
+
+  const toggleExpandAll = () => {
+    const next = !allExpanded;
+    const updated: Record<string, boolean> = {};
+    sections.forEach((section) => {
+      updated[section.key] = next;
+    });
+    setExpandedSections(updated);
+  };
+
+  const toggleSection = (key: string) => {
+    setExpandedSections((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
 
   return (
     <Card>
@@ -85,8 +155,8 @@ export function ProposalOutline({ coach }: ProposalOutlineProps) {
             <h2 className="text-xl font-semibold text-gray-900">Proposal Outline</h2>
             <p className="text-sm text-gray-500">Targeted at: {coach.target_funder}</p>
           </div>
-          <Button variant="outline" size="sm" onClick={() => setExpandAll(!expandAll)}>
-            {expandAll ? 'Collapse All' : 'Expand All'}
+          <Button variant="outline" size="sm" onClick={toggleExpandAll}>
+            {allExpanded ? 'Collapse All' : 'Expand All'}
           </Button>
         </div>
       </CardHeader>
@@ -98,6 +168,8 @@ export function ProposalOutline({ coach }: ProposalOutlineProps) {
             title={section.title}
             content={section.content}
             index={index}
+            expanded={Boolean(expandedSections[section.key])}
+            onToggle={() => toggleSection(section.key)}
           />
         ))}
 

@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { getServerSession } from '@/lib/auth';
+import { requireAdmin } from '@/lib/access-control';
 
 // GET - List discovered grants
 export async function GET(request: NextRequest) {
   try {
+    const admin = await requireAdmin();
+    if (!admin.ok) return admin.response;
+
     const searchParams = request.nextUrl.searchParams;
     const status = searchParams.get('status') || 'pending';
     const limit = parseInt(searchParams.get('limit') || '50');

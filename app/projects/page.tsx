@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Card, CardHeader, CardContent } from '@/components/ui/Card';
+import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/lib/auth-context';
 
@@ -55,7 +55,8 @@ const tierColors: Record<string, string> = {
 };
 
 export default function ProjectsPage() {
-  const { advisor } = useAuth();
+  const { advisor, loading: authLoading } = useAuth();
+  const canViewAllProjects = advisor?.role === 'admin';
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -68,7 +69,19 @@ export default function ProjectsPage() {
     hasMore: false,
   });
 
-  const fetchProjects = async (offset = 0) => {
+  const fetchProjects = useCallback(async (offset = 0) => {
+    if (!advisor) {
+      setProjects([]);
+      setPagination({
+        total: 0,
+        limit: 20,
+        offset: 0,
+        hasMore: false,
+      });
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
       const params = new URLSearchParams();
@@ -77,7 +90,7 @@ export default function ProjectsPage() {
       if (filter !== 'all') {
         params.set('status', filter);
       }
-      if (myProjectsOnly && advisor) {
+      if (canViewAllProjects && myProjectsOnly) {
         params.set('my_projects', 'true');
       }
 
@@ -92,11 +105,11 @@ export default function ProjectsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [advisor, canViewAllProjects, filter, myProjectsOnly]);
 
   useEffect(() => {
     fetchProjects();
-  }, [filter, myProjectsOnly]);
+  }, [fetchProjects]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-GB', {
@@ -117,6 +130,12 @@ export default function ProjectsPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
+      {authLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
+        </div>
+      ) : (
+        <>
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Project Submissions</h1>
@@ -148,7 +167,7 @@ export default function ProjectsPage() {
           ))}
         </div>
 
-        {advisor && (
+        {canViewAllProjects && (
           <label className="flex items-center space-x-2 cursor-pointer">
             <input
               type="checkbox"
@@ -167,7 +186,16 @@ export default function ProjectsPage() {
         </div>
       )}
 
-      {loading ? (
+      {!advisor ? (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <p className="text-gray-600 mb-4">Please log in to view project submissions.</p>
+            <Link href="/login">
+              <Button>Go to Login</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      ) : loading ? (
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
         </div>
@@ -302,6 +330,8 @@ export default function ProjectsPage() {
               </Button>
             </div>
           )}
+        </>
+      )}
         </>
       )}
     </div>

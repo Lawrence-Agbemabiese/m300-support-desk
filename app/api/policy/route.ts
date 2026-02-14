@@ -3,9 +3,13 @@ import { ProjectIntakeSchema } from '@/lib/schemas';
 import { interpretPolicy } from '@/lib/agents/policy-interpreter';
 import { enhanceNarrative, isConfigured } from '@/lib/llm/client';
 import { M300_SYSTEM_PROMPT, getPolicyEnhancementPrompt } from '@/lib/llm/prompts';
+import { requireAuth } from '@/lib/access-control';
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAuth();
+    if (!auth.ok) return auth.response;
+
     const body = await request.json();
 
     // Parse and validate project intake

@@ -79,7 +79,28 @@ const productiveUseOptions = [
   'medical_equipment',
 ];
 
-const EXAMPLE_PROJECTS = {
+const readinessStatusOptions = [
+  { value: 'complete', label: 'Complete' },
+  { value: 'partial', label: 'Partial / Draft' },
+  { value: 'missing', label: 'Missing' },
+  { value: 'unknown', label: 'Unknown' },
+];
+
+const defaultReadinessEvidence: NonNullable<ProjectIntake['readiness_evidence']> = {
+  legal_entity_registration: { status: 'unknown', details: '' },
+  land_site_documentation: { status: 'unknown', details: '' },
+  community_stakeholder_endorsement: { status: 'unknown', details: '' },
+  ministry_agency_endorsement: { status: 'unknown', details: '' },
+  demand_assessment: { status: 'unknown', details: '' },
+  technical_design: { status: 'unknown', details: '' },
+  detailed_budget: { status: 'unknown', details: '' },
+  financial_projections: { status: 'unknown', details: '' },
+  co_financing_documentation: { status: 'unknown', details: '' },
+  implementation_timeline: { status: 'unknown', details: '' },
+  mel_framework: { status: 'unknown', details: '' },
+};
+
+const EXAMPLE_PROJECTS: Record<'minigrid' | 'health', Partial<ProjectIntake>> = {
   minigrid: {
     project_name: 'Nkoranza Community Solar Mini-Grid',
     country: 'Ghana',
@@ -95,6 +116,20 @@ const EXAMPLE_PROJECTS = {
     community_engagement: 'Community Energy Cooperative registered with Department of Cooperatives, 245 member households, monthly meetings since 2023',
     additional_context: 'ECG confirms no grid extension planned for this area within 10 years. Strong solar irradiance (5.5 kWh/m2/day). District Assembly supportive.',
     debt_preference: 'grant_only' as const,
+    readiness_evidence: {
+      ...defaultReadinessEvidence,
+      legal_entity_registration: { status: 'complete', details: 'Cooperative registration certificate available (2023).' },
+      land_site_documentation: { status: 'partial', details: 'Land allocation letter drafted; final signature pending district office.' },
+      community_stakeholder_endorsement: { status: 'complete', details: 'Signed endorsement minutes from community assembly.' },
+      ministry_agency_endorsement: { status: 'partial', details: 'District Assembly support letter draft under review.' },
+      demand_assessment: { status: 'partial', details: 'Initial household demand survey completed for 150/280 households.' },
+      technical_design: { status: 'partial', details: 'Preliminary single-line diagram and load assumptions prepared.' },
+      detailed_budget: { status: 'missing', details: 'Awaiting supplier quotations.' },
+      financial_projections: { status: 'missing', details: '' },
+      co_financing_documentation: { status: 'partial', details: 'Community contribution commitment letter available.' },
+      implementation_timeline: { status: 'complete', details: '8-month implementation schedule prepared.' },
+      mel_framework: { status: 'partial', details: 'Initial KPI list drafted; baselines pending.' },
+    },
   },
   health: {
     project_name: 'Upper West CHPS Electrification',
@@ -111,6 +146,20 @@ const EXAMPLE_PROJECTS = {
     community_engagement: 'Community Health Management Committees (CHMCs) active at all 8 facilities',
     additional_context: 'Upper West Region has lowest electrification rate in Ghana. GHS fiscal constraints prevent loan-financed solutions.',
     debt_preference: 'grant_only' as const,
+    readiness_evidence: {
+      ...defaultReadinessEvidence,
+      legal_entity_registration: { status: 'complete', details: 'Implemented under Ghana Health Service mandate.' },
+      land_site_documentation: { status: 'complete', details: 'All CHPS facilities are public assets with known coordinates.' },
+      community_stakeholder_endorsement: { status: 'partial', details: 'CHMC confirmations received from 5/8 sites.' },
+      ministry_agency_endorsement: { status: 'complete', details: 'Regional Health Directorate endorsement letter signed.' },
+      demand_assessment: { status: 'complete', details: 'Facility load and service-demand assessment completed.' },
+      technical_design: { status: 'partial', details: 'System sizing complete; protection design under review.' },
+      detailed_budget: { status: 'partial', details: 'Draft BoQ prepared; final vendor pricing pending.' },
+      financial_projections: { status: 'partial', details: 'OPEX estimates drafted in annual budget note.' },
+      co_financing_documentation: { status: 'complete', details: 'Government O&M commitment documented.' },
+      implementation_timeline: { status: 'complete', details: 'Site-by-site implementation schedule finalized.' },
+      mel_framework: { status: 'partial', details: 'Monitoring indicators drafted with district health team.' },
+    },
   },
 };
 
@@ -122,6 +171,7 @@ export function ProjectIntakeForm({ onSubmit, loading = false }: ProjectIntakeFo
     project_stage: 'concept',
     debt_preference: 'grant_preferred',
     productive_uses: [],
+    readiness_evidence: defaultReadinessEvidence,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -143,6 +193,24 @@ export function ProjectIntakeForm({ onSubmit, loading = false }: ProjectIntakeFo
     } else {
       updateField('productive_uses', [...current, use]);
     }
+  };
+
+  const updateReadinessEvidence = <
+    K extends keyof NonNullable<ProjectIntake['readiness_evidence']>,
+    F extends keyof NonNullable<ProjectIntake['readiness_evidence']>[K]
+  >(
+    itemKey: K,
+    field: F,
+    value: NonNullable<ProjectIntake['readiness_evidence']>[K][F]
+  ) => {
+    const current = formData.readiness_evidence || defaultReadinessEvidence;
+    updateField('readiness_evidence', {
+      ...current,
+      [itemKey]: {
+        ...current[itemKey],
+        [field]: value,
+      },
+    });
   };
 
   const loadExample = (type: 'minigrid' | 'health') => {
@@ -214,7 +282,7 @@ export function ProjectIntakeForm({ onSubmit, loading = false }: ProjectIntakeFo
           </div>
         </div>
         <div className="flex items-center space-x-2 mt-4">
-          {[1, 2, 3, 4].map((s) => (
+          {[1, 2, 3, 4, 5].map((s) => (
             <div
               key={s}
               className={`flex-1 h-2 rounded-full ${s <= step ? 'bg-emerald-500' : 'bg-gray-200'}`}
@@ -225,6 +293,7 @@ export function ProjectIntakeForm({ onSubmit, loading = false }: ProjectIntakeFo
           <span>Basics</span>
           <span>Technical</span>
           <span>Ownership</span>
+          <span>Readiness</span>
           <span>Options</span>
         </div>
       </CardHeader>
@@ -353,8 +422,59 @@ export function ProjectIntakeForm({ onSubmit, loading = false }: ProjectIntakeFo
           </div>
         )}
 
-        {/* Step 4: Options & Submit */}
+        {/* Step 4: Readiness Evidence */}
         {step === 4 && (
+          <div className="space-y-4">
+            <h3 className="font-medium text-gray-900">Readiness Evidence</h3>
+            <p className="text-sm text-gray-600">
+              Provide current status and evidence notes (or document links) for each item. This drives the readiness checklist.
+            </p>
+
+            {[
+              ['legal_entity_registration', 'Legal entity registration'],
+              ['land_site_documentation', 'Land/site documentation'],
+              ['community_stakeholder_endorsement', 'Community/stakeholder endorsement'],
+              ['ministry_agency_endorsement', 'Relevant Ministry/Agency endorsement'],
+              ['demand_assessment', 'Demand assessment'],
+              ['technical_design', 'Technical design'],
+              ['detailed_budget', 'Detailed budget'],
+              ['financial_projections', 'Financial projections'],
+              ['co_financing_documentation', 'Co-financing documentation'],
+              ['implementation_timeline', 'Implementation timeline'],
+              ['mel_framework', 'M&E framework'],
+            ].map(([key, label]) => {
+              const itemKey = key as keyof NonNullable<ProjectIntake['readiness_evidence']>;
+              const item = (formData.readiness_evidence || defaultReadinessEvidence)[itemKey];
+              return (
+                <div key={key} className="rounded-lg border border-gray-200 p-3 space-y-3">
+                  <Select
+                    label={label}
+                    options={readinessStatusOptions}
+                    value={item.status}
+                    onChange={(e) =>
+                      updateReadinessEvidence(
+                        itemKey,
+                        'status',
+                        e.target.value as NonNullable<ProjectIntake['readiness_evidence']>[typeof itemKey]['status']
+                      )
+                    }
+                    required
+                  />
+                  <Textarea
+                    label="Evidence details / document links"
+                    placeholder="Add notes, filenames, links, dates, or ownership of this artifact..."
+                    value={item.details || ''}
+                    onChange={(e) => updateReadinessEvidence(itemKey, 'details', e.target.value)}
+                    rows={2}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Step 5: Options & Submit */}
+        {step === 5 && (
           <div className="space-y-4">
             <h3 className="font-medium text-gray-900">Additional Options</h3>
             <Select
@@ -419,7 +539,7 @@ export function ProjectIntakeForm({ onSubmit, loading = false }: ProjectIntakeFo
           ) : (
             <div />
           )}
-          {step < 4 ? (
+          {step < 5 ? (
             <Button onClick={handleNext}>Next</Button>
           ) : (
             <Button onClick={handleSubmit} loading={loading}>

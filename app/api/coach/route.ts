@@ -3,6 +3,7 @@ import { ProjectIntakeSchema, PolicyInterpretationSchema, GrantMatchSchema } fro
 import { interpretPolicy } from '@/lib/agents/policy-interpreter';
 import { matchGrants } from '@/lib/agents/grant-matcher';
 import { coachProposal } from '@/lib/agents/proposal-coach';
+import { requireAuth } from '@/lib/access-control';
 
 interface CoachRequestBody {
   project: unknown;
@@ -12,6 +13,9 @@ interface CoachRequestBody {
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAuth();
+    if (!auth.ok) return auth.response;
+
     const body: CoachRequestBody = await request.json();
 
     // Parse and validate project intake

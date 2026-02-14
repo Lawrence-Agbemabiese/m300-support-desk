@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { getServerSession } from '@/lib/auth';
+import { isAdmin, requireAuth } from '@/lib/access-control';
 
 // GET /api/projects - List all projects
 export async function GET(request: NextRequest) {
@@ -12,12 +12,17 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    const session = await getServerSession();
+    const auth = await requireAuth();
+    if (!auth.ok) return auth.response;
+    const { session } = auth;
+    const sessionIsAdmin = isAdmin(session);
 
     const where: Record<string, unknown> = {};
     if (status) where.status = status;
     if (country) where.country = country;
-    if (myProjects && session) {
+    if (sessionIsAdmin && myProjects) {
+      where.advisorId = session.id;
+    } else if (!sessionIsAdmin) {
       where.advisorId = session.id;
     }
 

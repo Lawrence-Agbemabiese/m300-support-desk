@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, use, useCallback } from 'react';
 import Link from 'next/link';
 import { PolicyResults } from '@/components/PolicyResults';
 import { GrantMatches } from '@/components/GrantMatches';
@@ -9,6 +9,7 @@ import { ReadinessChecklist } from '@/components/ReadinessChecklist';
 import { PDFDownloadButton } from '@/components/PDFDownloadButton';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
+import { useAuth } from '@/lib/auth-context';
 import type { AnalysisResult } from '@/lib/schemas';
 
 interface ProjectDetail {
@@ -48,6 +49,8 @@ const statusOptions = [
 
 export default function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const { advisor } = useAuth();
+  const canEditStatus = advisor?.role === 'admin';
   const [project, setProject] = useState<ProjectDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -56,14 +59,16 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    fetchProject();
-  }, [id]);
-
-  const fetchProject = async () => {
+  const fetchProject = useCallback(async () => {
     try {
       const response = await fetch(`/api/projects/${id}`);
       if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Please log in to view this project');
+        }
+        if (response.status === 403) {
+          throw new Error('You do not have permission to view this project');
+        }
         if (response.status === 404) {
           throw new Error('Project not found');
         }
@@ -77,9 +82,15 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    fetchProject();
+  }, [fetchProject]);
 
   const updateStatus = async (newStatus: string) => {
+    if (!canEditStatus) return;
+
     setSaving(true);
     try {
       const response = await fetch(`/api/projects/${id}`, {
@@ -206,18 +217,24 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
         </div>
         <div className="flex items-center space-x-3">
           {result && <PDFDownloadButton result={result} />}
-          <select
-            value={project.status}
-            onChange={(e) => updateStatus(e.target.value)}
-            disabled={saving}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-          >
-            {statusOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          {canEditStatus ? (
+            <select
+              value={project.status}
+              onChange={(e) => updateStatus(e.target.value)}
+              disabled={saving}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+            >
+              {statusOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <span className="px-3 py-2 text-sm rounded-lg bg-gray-100 text-gray-600">
+              Status: {project.status.replace(/_/g, ' ')}
+            </span>
+          )}
         </div>
       </div>
 

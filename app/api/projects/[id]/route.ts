@@ -1,18 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { getServerSession } from '@/lib/auth';
-import type { AnalysisResult, ProjectIntake, PolicyInterpretation, GrantMatchResult, ProposalCoach } from '@/lib/schemas';
+import { isAdmin, requireAdmin, requireAuth } from '@/lib/access-control';
+import type { AnalysisResult, ProjectIntake, PolicyInterpretation, GrantMatchResult, ProposalCoach, TradeOffExplorerResult } from '@/lib/schemas';
 
 // GET /api/projects/[id] - Get single project with full details
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = await requireAuth();
+    if (!auth.ok) return auth.response;
+    const { session } = auth;
+    const sessionIsAdmin = isAdmin(session);
+
     const { id } = await params;
 
-    const project = await prisma.project.findUnique({
-      where: { id },
+    const project = await prisma.project.findFirst({
+      where: sessionIsAdmin ? { id } : { id, advisorId: session.id },
       include: {
         advisor: {
           select: {
@@ -33,6 +38,8 @@ export async function GET(
     }
 
     // Reconstruct the full analysis result
+    const tradeoffsRaw = (project as any).tradeoffsResult as string | null | undefined;
+
     const analysisResult: AnalysisResult | null = project.policyResult ? {
       project: {
         project_name: project.projectName,
@@ -53,6 +60,7 @@ export async function GET(
       policy: JSON.parse(project.policyResult) as PolicyInterpretation,
       grants: JSON.parse(project.grantsResult!) as GrantMatchResult,
       coach: JSON.parse(project.coachResult!) as ProposalCoach,
+      tradeoffs: tradeoffsRaw ? (JSON.parse(tradeoffsRaw) as TradeOffExplorerResult) : undefined,
       metadata: {
         enhanced: project.enhanced,
         processing_time_ms: project.processingTimeMs ?? 0,
@@ -93,10 +101,22 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = await requireAuth();
+    if (!auth.ok) return auth.response;
+    const { session } = auth;
+    const sessionIsAdmin = isAdmin(session);
+
     const { id } = await params;
     const body = await request.json();
 
-    const allowedFields = ['status', 'advisorNotes'];
+    if (body.status !== undefined && !sessionIsAdmin) {
+      return NextResponse.json(
+        { error: 'Only admins can update project status' },
+        { status: 403 }
+      );
+    }
+
+    const allowedFields = sessionIsAdmin ? ['status', 'advisorNotes'] : ['advisorNotes'];
     const updateData: Record<string, string> = {};
 
     for (const field of allowedFields) {
@@ -109,6 +129,18 @@ export async function PATCH(
       return NextResponse.json(
         { error: 'No valid fields to update' },
         { status: 400 }
+      );
+    }
+
+    const existing = await prisma.project.findFirst({
+      where: sessionIsAdmin ? { id } : { id, advisorId: session.id },
+      select: { id: true },
+    });
+
+    if (!existing) {
+      return NextResponse.json(
+        { error: 'Project not found' },
+        { status: 404 }
       );
     }
 
@@ -135,10 +167,13 @@ export async function PATCH(
 
 // DELETE /api/projects/[id] - Delete a project
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const admin = await requireAdmin();
+    if (!admin.ok) return admin.response;
+
     const { id } = await params;
 
     await prisma.project.delete({

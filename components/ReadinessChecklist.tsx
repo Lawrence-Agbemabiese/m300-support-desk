@@ -9,7 +9,15 @@ interface ReadinessChecklistProps {
   coach: ProposalCoach;
 }
 
-function ChecklistItemRow({ item, onToggle }: { item: ChecklistItem; onToggle: () => void }) {
+function ChecklistItemRow({
+  item,
+  expanded,
+  onToggleExpand,
+}: {
+  item: ChecklistItem;
+  expanded: boolean;
+  onToggleExpand: () => void;
+}) {
   const statusColors = {
     ready: 'text-emerald-500',
     not_ready: 'text-red-500',
@@ -48,53 +56,69 @@ function ChecklistItemRow({ item, onToggle }: { item: ChecklistItem; onToggle: (
   };
 
   return (
-    <div
-      className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-      onClick={onToggle}
-    >
-      <span className={statusColors[item.status]}>
-        {statusIcons[item.status]}
-      </span>
-      <div className="flex-1">
-        <div className="flex items-center space-x-2">
-          <span className={`text-sm ${item.status === 'ready' ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
-            {item.item}
-          </span>
-          {item.priority && (
-            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${priorityBadges[item.priority]}`}>
-              {item.priority.replace(/_/g, ' ')}
+    <div className="p-3 rounded-lg">
+      <button
+        type="button"
+        onClick={onToggleExpand}
+        className="w-full flex items-start space-x-3 text-left"
+      >
+        <span className={statusColors[item.status]}>
+          {statusIcons[item.status]}
+        </span>
+        <div className="flex-1">
+          <div className="flex items-center space-x-2">
+            <span className={`text-sm ${item.status === 'ready' ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
+              {item.item}
             </span>
+            {item.priority && (
+              <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${priorityBadges[item.priority]}`}>
+                {item.priority.replace(/_/g, ' ')}
+              </span>
+            )}
+          </div>
+        </div>
+        <svg
+          className={`w-4 h-4 text-gray-400 mt-0.5 transition-transform ${expanded ? 'rotate-180' : ''}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {expanded && (
+        <div className="mt-2 pl-8">
+          {item.notes && <p className="text-xs text-gray-600">{item.notes}</p>}
+          {item.status === 'in_progress' && (
+            <p className="text-xs text-blue-700 mt-1">Next step: complete remaining evidence and mark this item complete.</p>
+          )}
+          {item.status === 'not_ready' && (
+            <p className="text-xs text-red-700 mt-1">Next step: this artifact is still missing and is blocking readiness.</p>
+          )}
+          {item.status === 'unknown' && (
+            <p className="text-xs text-gray-600 mt-1">Next step: confirm status and add supporting details/doc links.</p>
           )}
         </div>
-        {item.notes && (
-          <p className="text-xs text-gray-500 mt-1">{item.notes}</p>
-        )}
-      </div>
+      )}
     </div>
   );
 }
 
 export function ReadinessChecklist({ coach }: ReadinessChecklistProps) {
-  const [checklist, setChecklist] = useState(coach.readiness_checklist);
+  const checklist = coach.readiness_checklist;
+  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
 
-  const toggleItem = (index: number) => {
-    setChecklist((prev) => {
-      const newList = [...prev];
-      const currentStatus = newList[index].status;
-      // Cycle through statuses: not_ready -> in_progress -> ready -> not_ready
-      const nextStatus =
-        currentStatus === 'not_ready' ? 'in_progress' :
-        currentStatus === 'in_progress' ? 'ready' :
-        currentStatus === 'unknown' ? 'in_progress' :
-        'not_ready';
-      newList[index] = { ...newList[index], status: nextStatus };
-      return newList;
-    });
+  const toggleExpanded = (key: string) => {
+    setExpandedItems((prev) => ({ ...prev, [key]: !prev[key] }));
   };
-
-  const readyCount = checklist.filter((item) => item.status === 'ready').length;
+  const readyCount = coach.readiness_summary?.ready_count ?? checklist.filter((item) => item.status === 'ready').length;
+  const notReadyCount = coach.readiness_summary?.not_ready_count ?? checklist.filter((item) => item.status === 'not_ready').length;
+  const unknownCount =
+    coach.readiness_summary?.unknown_count ??
+    checklist.filter((item) => item.status === 'unknown' || item.status === 'in_progress').length;
   const totalCount = checklist.length;
-  const progressPercent = (readyCount / totalCount) * 100;
+  const progressPercent = totalCount > 0 ? (readyCount / totalCount) * 100 : 0;
 
   const readinessColors = {
     ready_to_submit: 'bg-emerald-100 text-emerald-800',
@@ -134,15 +158,15 @@ export function ReadinessChecklist({ coach }: ReadinessChecklistProps) {
         {coach.readiness_summary && (
           <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
             <div className="text-center">
-              <div className="text-2xl font-bold text-emerald-600">{coach.readiness_summary.ready_count}</div>
+              <div className="text-2xl font-bold text-emerald-600">{readyCount}</div>
               <div className="text-xs text-gray-500">Ready</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-red-600">{coach.readiness_summary.not_ready_count}</div>
+              <div className="text-2xl font-bold text-red-600">{notReadyCount}</div>
               <div className="text-xs text-gray-500">Not Ready</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-gray-400">{coach.readiness_summary.unknown_count}</div>
+              <div className="text-2xl font-bold text-gray-400">{unknownCount}</div>
               <div className="text-xs text-gray-500">Unknown</div>
             </div>
           </div>
@@ -162,10 +186,8 @@ export function ReadinessChecklist({ coach }: ReadinessChecklistProps) {
                 <ChecklistItemRow
                   key={`critical-${index}`}
                   item={item}
-                  onToggle={() => {
-                    const originalIndex = checklist.findIndex((i) => i.item === item.item);
-                    toggleItem(originalIndex);
-                  }}
+                  expanded={Boolean(expandedItems[`critical-${index}-${item.item}`])}
+                  onToggleExpand={() => toggleExpanded(`critical-${index}-${item.item}`)}
                 />
               ))}
             </div>
@@ -186,10 +208,8 @@ export function ReadinessChecklist({ coach }: ReadinessChecklistProps) {
                 <ChecklistItemRow
                   key={`important-${index}`}
                   item={item}
-                  onToggle={() => {
-                    const originalIndex = checklist.findIndex((i) => i.item === item.item);
-                    toggleItem(originalIndex);
-                  }}
+                  expanded={Boolean(expandedItems[`important-${index}-${item.item}`])}
+                  onToggleExpand={() => toggleExpanded(`important-${index}-${item.item}`)}
                 />
               ))}
             </div>
@@ -210,10 +230,8 @@ export function ReadinessChecklist({ coach }: ReadinessChecklistProps) {
                 <ChecklistItemRow
                   key={`nice-${index}`}
                   item={item}
-                  onToggle={() => {
-                    const originalIndex = checklist.findIndex((i) => i.item === item.item);
-                    toggleItem(originalIndex);
-                  }}
+                  expanded={Boolean(expandedItems[`nice-${index}-${item.item}`])}
+                  onToggleExpand={() => toggleExpanded(`nice-${index}-${item.item}`)}
                 />
               ))}
             </div>

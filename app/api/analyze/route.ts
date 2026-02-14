@@ -3,15 +3,20 @@ import { ProjectIntakeSchema, type AnalysisResult } from '@/lib/schemas';
 import { interpretPolicy } from '@/lib/agents/policy-interpreter';
 import { matchGrants } from '@/lib/agents/grant-matcher';
 import { coachProposal } from '@/lib/agents/proposal-coach';
+import { exploreTradeOffs } from '@/lib/agents/policy-tradeoff';
 import { enhanceNarrative, isConfigured } from '@/lib/llm/client';
 import { M300_SYSTEM_PROMPT, getPolicyEnhancementPrompt } from '@/lib/llm/prompts';
 import { prisma } from '@/lib/db';
-import { getServerSession } from '@/lib/auth';
+import { requireAuth } from '@/lib/access-control';
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
 
   try {
+    const auth = await requireAuth();
+    if (!auth.ok) return auth.response;
+    const { session } = auth;
+
     const body = await request.json();
 
     // Parse and validate project intake
@@ -34,6 +39,9 @@ export async function POST(request: NextRequest) {
 
     // Step 1: Policy Interpretation
     let policy = interpretPolicy(project);
+
+    // Step 1b: Policy Trade-Off Explorer (deterministic, no LLM)
+    const tradeoffs = exploreTradeOffs(project, policy);
 
     // Step 2: Grant Matching
     const grants = matchGrants(project);
@@ -66,11 +74,9 @@ export async function POST(request: NextRequest) {
 
     const processingTime = Date.now() - startTime;
 
-    // Get current advisor session (if logged in)
-    const session = await getServerSession();
-
     // Save to database
     const savedProject = await prisma.project.create({
+      // Cast to any to remain compatible until Prisma client is regenerated with new column
       data: {
         projectName: project.project_name,
         country: project.country,
@@ -89,14 +95,15 @@ export async function POST(request: NextRequest) {
         policyResult: JSON.stringify(policy),
         grantsResult: JSON.stringify(grants),
         coachResult: JSON.stringify(coach),
+        tradeoffsResult: JSON.stringify(tradeoffs),
         m300Score: policy.m300_alignment_score,
         debtTier: policy.debt_sensitivity_tier,
         topFunder: grants.matches[0]?.funder_name,
         topFunderScore: grants.matches[0]?.fit_score,
         enhanced: Boolean(modelUsed),
         processingTimeMs: processingTime,
-        advisorId: session?.id || null,
-      },
+        advisorId: session.id,
+      } as any,
     });
 
     const result: AnalysisResult = {
@@ -104,6 +111,7 @@ export async function POST(request: NextRequest) {
       policy,
       grants,
       coach,
+      tradeoffs,
       metadata: {
         enhanced: Boolean(modelUsed),
         model: modelUsed,

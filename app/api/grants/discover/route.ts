@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { prisma } from '@/lib/db';
-import { getServerSession } from '@/lib/auth';
 import { grants } from '@/lib/data/grants';
+import { requireAdmin } from '@/lib/access-control';
 
 const DISCOVERY_PROMPT = `You are a grant funding research assistant specializing in African energy access programs. Your task is to identify NEW grant funding opportunities that are NOT already in our database.
 
@@ -51,15 +51,9 @@ IMPORTANT:
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession();
-
-    // Check for admin or any logged-in user (you can restrict to admin later)
-    if (!session) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
+    const admin = await requireAdmin();
+    if (!admin.ok) return admin.response;
+    const { session } = admin;
 
     const body = await request.json();
     const { query, region } = body;
@@ -234,6 +228,9 @@ export async function POST(request: NextRequest) {
 // GET - Get search history
 export async function GET() {
   try {
+    const admin = await requireAdmin();
+    if (!admin.ok) return admin.response;
+
     const searches = await prisma.grantSearch.findMany({
       orderBy: { createdAt: 'desc' },
       take: 20,

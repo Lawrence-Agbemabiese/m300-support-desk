@@ -108,6 +108,7 @@ model Project {
   policyResult        String?  // PolicyInterpretation JSON
   grantsResult        String?  // GrantMatchResult JSON
   coachResult         String?  // ProposalCoach JSON
+  tradeoffsResult     String?  // TradeOffExplorer JSON
 
   // Metadata
   m300Score           Int?

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { ProjectIntakeForm } from '@/components/ProjectIntakeForm';
 import { PolicyResults } from '@/components/PolicyResults';
 import { GrantMatches } from '@/components/GrantMatches';
@@ -8,11 +9,15 @@ import { ProposalOutline } from '@/components/ProposalOutline';
 import { ReadinessChecklist } from '@/components/ReadinessChecklist';
 import { PDFDownloadButton } from '@/components/PDFDownloadButton';
 import { Button } from '@/components/ui/Button';
+import { Card, CardContent } from '@/components/ui/Card';
+import { TradeOffExplorer } from '@/components/TradeOffExplorer';
+import { useAuth } from '@/lib/auth-context';
 import type { AnalysisResult, ProjectIntake } from '@/lib/schemas';
 
-type ViewTab = 'policy' | 'grants' | 'proposal' | 'checklist';
+type ViewTab = 'policy' | 'tradeoffs' | 'grants' | 'proposal' | 'checklist';
 
 export default function AnalyzePage() {
+  const { advisor, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<AnalysisResult | null>(null);
@@ -64,10 +69,38 @@ export default function AnalyzePage() {
 
   const tabs: { id: ViewTab; label: string }[] = [
     { id: 'policy', label: 'Policy Alignment' },
+    { id: 'tradeoffs', label: 'Trade-Off Explorer' },
     { id: 'grants', label: 'Grant Matches' },
     { id: 'proposal', label: 'Proposal Outline' },
     { id: 'checklist', label: 'Readiness Checklist' },
   ];
+
+  if (authLoading) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!advisor) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <Card>
+          <CardContent className="py-12 text-center">
+            <p className="text-gray-600 mb-4">
+              Please log in to submit a project for analysis.
+            </p>
+            <Link href="/login">
+              <Button>Go to Login</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (!result) {
     return (
@@ -180,6 +213,12 @@ export default function AnalyzePage() {
               <GrantMatches grants={result.grants} />
             </div>
           </>
+        )}
+
+        {activeTab === 'tradeoffs' && result.tradeoffs && (
+          <div className="lg:col-span-2">
+            <TradeOffExplorer tradeoffs={result.tradeoffs} />
+          </div>
         )}
 
         {activeTab === 'grants' && (
