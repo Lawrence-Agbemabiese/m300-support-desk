@@ -16,6 +16,7 @@ export function coachProposal(
   const productiveUses = project.productive_uses || [];
   const capacity = project.capacity_kw;
   const existingFunding = project.existing_funding || '';
+  const readiness = project.readiness_evidence;
 
   // Generate proposal outline
   const proposalOutline = {
@@ -81,37 +82,88 @@ export function coachProposal(
       `This project ${interpretation.debt_sensitivity_tier === 'tier_1' ? 'creates no debt obligations' : 'has debt implications requiring management'}.`,
   };
 
-  // Generate readiness checklist
+  const mapEvidenceStatus = (
+    status: 'complete' | 'partial' | 'missing' | 'unknown' | undefined,
+    fallback: 'ready' | 'not_ready' | 'unknown' = 'unknown'
+  ): 'ready' | 'in_progress' | 'not_ready' | 'unknown' => {
+    if (!status) return fallback;
+    if (status === 'complete') return 'ready';
+    if (status === 'partial') return 'in_progress';
+    if (status === 'missing') return 'not_ready';
+    return 'unknown';
+  };
+
   const readinessChecklist: ChecklistItem[] = [
-    { item: 'Legal entity registration', status: 'unknown', notes: 'Verify certificate is current', priority: 'critical' },
-    { item: 'Land/site documentation', status: 'unknown', notes: 'Obtain lease or allocation letter', priority: 'critical' },
-    { item: 'Community/stakeholder endorsement', status: 'unknown', notes: 'Document formal support', priority: 'critical' },
-    { item: 'Demand assessment', status: 'not_ready', notes: 'Conduct beneficiary survey', priority: 'critical' },
-    { item: 'Technical design', status: 'not_ready', notes: 'Commission preliminary design', priority: 'important' },
-    { item: 'Detailed budget', status: 'not_ready', notes: 'Obtain equipment quotes', priority: 'important' },
-    { item: 'Financial projections', status: 'not_ready', notes: 'Develop 5-year model', priority: 'important' },
     {
-      item: 'Co-financing documentation',
-      status: existingFunding ? 'unknown' : 'not_ready',
-      notes: `Document ${existingFunding || 'any contributions'}`,
+      item: 'Legal entity registration',
+      status: mapEvidenceStatus(readiness?.legal_entity_registration?.status, 'unknown'),
+      notes: readiness?.legal_entity_registration?.details || 'Verify certificate is current',
+      priority: 'critical',
+    },
+    {
+      item: 'Land/site documentation',
+      status: mapEvidenceStatus(readiness?.land_site_documentation?.status, 'unknown'),
+      notes: readiness?.land_site_documentation?.details || 'Obtain lease or allocation letter',
+      priority: 'critical',
+    },
+    {
+      item: 'Community/stakeholder endorsement',
+      status: mapEvidenceStatus(readiness?.community_stakeholder_endorsement?.status, 'unknown'),
+      notes: readiness?.community_stakeholder_endorsement?.details || 'Document formal support',
+      priority: 'critical',
+    },
+    {
+      item: 'Relevant ministry/agency endorsement',
+      status: mapEvidenceStatus(readiness?.ministry_agency_endorsement?.status, 'unknown'),
+      notes: readiness?.ministry_agency_endorsement?.details || 'Obtain formal letter from relevant authority',
+      priority: 'critical',
+    },
+    {
+      item: 'Demand assessment',
+      status: mapEvidenceStatus(readiness?.demand_assessment?.status, 'not_ready'),
+      notes: readiness?.demand_assessment?.details || 'Conduct beneficiary survey',
+      priority: 'critical',
+    },
+    {
+      item: 'Technical design',
+      status: mapEvidenceStatus(readiness?.technical_design?.status, 'not_ready'),
+      notes: readiness?.technical_design?.details || 'Commission preliminary design',
       priority: 'important',
     },
-    { item: 'Implementation timeline', status: 'ready', notes: 'Outlined in proposal', priority: 'nice_to_have' },
-    { item: 'M&E framework', status: 'ready', notes: 'Outlined in proposal', priority: 'nice_to_have' },
+    {
+      item: 'Detailed budget',
+      status: mapEvidenceStatus(readiness?.detailed_budget?.status, 'not_ready'),
+      notes: readiness?.detailed_budget?.details || 'Obtain equipment quotes',
+      priority: 'important',
+    },
+    {
+      item: 'Financial projections',
+      status: mapEvidenceStatus(readiness?.financial_projections?.status, 'not_ready'),
+      notes: readiness?.financial_projections?.details || 'Develop 5-year model',
+      priority: 'important',
+    },
+    {
+      item: 'Co-financing documentation',
+      status: mapEvidenceStatus(
+        readiness?.co_financing_documentation?.status,
+        existingFunding ? 'unknown' : 'not_ready'
+      ),
+      notes: readiness?.co_financing_documentation?.details || `Document ${existingFunding || 'any contributions'}`,
+      priority: 'important',
+    },
+    {
+      item: 'Implementation timeline',
+      status: mapEvidenceStatus(readiness?.implementation_timeline?.status, 'unknown'),
+      notes: readiness?.implementation_timeline?.details || 'Add milestone-based implementation schedule',
+      priority: 'important',
+    },
+    {
+      item: 'M&E framework',
+      status: mapEvidenceStatus(readiness?.mel_framework?.status, 'unknown'),
+      notes: readiness?.mel_framework?.details || 'Define indicators, baselines, and reporting cadence',
+      priority: 'important',
+    },
   ];
-
-  // Add health-specific items
-  if (
-    techType.toLowerCase().includes('health') ||
-    productiveUses.some((u) => u.includes('cold') || u.includes('medical'))
-  ) {
-    readinessChecklist.splice(3, 0, {
-      item: 'Health Ministry endorsement',
-      status: 'unknown',
-      notes: 'Obtain formal letter',
-      priority: 'critical',
-    });
-  }
 
   // Generate missing info questionnaire
   const missingInfo = [

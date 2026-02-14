@@ -50,6 +50,27 @@ export const ContactInfoSchema = z.object({
   phone: z.string().optional(),
 });
 
+export const ReadinessEvidenceStatus = z.enum(['complete', 'partial', 'missing', 'unknown']);
+
+export const ReadinessEvidenceItemSchema = z.object({
+  status: ReadinessEvidenceStatus,
+  details: z.string().optional(),
+});
+
+export const ReadinessEvidenceSchema = z.object({
+  legal_entity_registration: ReadinessEvidenceItemSchema,
+  land_site_documentation: ReadinessEvidenceItemSchema,
+  community_stakeholder_endorsement: ReadinessEvidenceItemSchema,
+  ministry_agency_endorsement: ReadinessEvidenceItemSchema,
+  demand_assessment: ReadinessEvidenceItemSchema,
+  technical_design: ReadinessEvidenceItemSchema,
+  detailed_budget: ReadinessEvidenceItemSchema,
+  financial_projections: ReadinessEvidenceItemSchema,
+  co_financing_documentation: ReadinessEvidenceItemSchema,
+  implementation_timeline: ReadinessEvidenceItemSchema,
+  mel_framework: ReadinessEvidenceItemSchema,
+});
+
 export const ProjectIntakeSchema = z.object({
   project_name: z.string().min(3).max(200),
   country: z.string().min(2),
@@ -66,6 +87,7 @@ export const ProjectIntakeSchema = z.object({
   additional_context: z.string().optional(),
   contact_info: ContactInfoSchema.optional(),
   debt_preference: DebtPreference.default('grant_preferred'),
+  readiness_evidence: ReadinessEvidenceSchema.optional(),
 });
 
 export type ProjectIntake = z.infer<typeof ProjectIntakeSchema>;
