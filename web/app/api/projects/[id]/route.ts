@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getServerSession } from '@/lib/auth';
+import { normalizeLegacyProblemStatement } from '@/lib/agents/proposal-coach';
 import type { AnalysisResult, ProjectIntake, PolicyInterpretation, GrantMatchResult, ProposalCoach, TradeOffExplorerResult } from '@/lib/schemas';
 
 // GET /api/projects/[id] - Get single project with full details
@@ -35,7 +36,24 @@ export async function GET(
     // Reconstruct the full analysis result
     const tradeoffsRaw = (project as any).tradeoffsResult as string | null | undefined;
 
-    const analysisResult: AnalysisResult | null = project.policyResult ? {
+    const parsedCoach = project.coachResult
+      ? (JSON.parse(project.coachResult) as ProposalCoach)
+      : null;
+    const normalizedCoach = parsedCoach
+      ? {
+          ...parsedCoach,
+          proposal_outline: {
+            ...parsedCoach.proposal_outline,
+            problem_statement: normalizeLegacyProblemStatement(
+              parsedCoach.proposal_outline.problem_statement,
+              project.locationDescription,
+              project.country
+            ),
+          },
+        }
+      : null;
+
+    const analysisResult: AnalysisResult | null = project.policyResult && normalizedCoach ? {
       project: {
         project_name: project.projectName,
         country: project.country,
@@ -54,7 +72,7 @@ export async function GET(
       },
       policy: JSON.parse(project.policyResult) as PolicyInterpretation,
       grants: JSON.parse(project.grantsResult!) as GrantMatchResult,
-      coach: JSON.parse(project.coachResult!) as ProposalCoach,
+      coach: normalizedCoach,
       tradeoffs: tradeoffsRaw ? (JSON.parse(tradeoffsRaw) as TradeOffExplorerResult) : undefined,
       metadata: {
         enhanced: project.enhanced,
