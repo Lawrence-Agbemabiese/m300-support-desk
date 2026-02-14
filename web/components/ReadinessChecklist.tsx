@@ -167,7 +167,7 @@ export function ReadinessChecklist({ coach }: ReadinessChecklistProps) {
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-gray-400">{unknownCount}</div>
-              <div className="text-xs text-gray-500">Unknown</div>
+              <div className="text-xs text-gray-500">Status Pending</div>
             </div>
           </div>
         )}
