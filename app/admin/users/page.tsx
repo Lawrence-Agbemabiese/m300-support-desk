@@ -13,6 +13,7 @@ interface AdvisorRow {
   name: string;
   organization: string | null;
   role: string;
+  isProtectedDeveloper?: boolean;
   _count: {
     projects: number;
   };
@@ -118,6 +119,7 @@ export default function AdminUsersPage() {
         <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
         <p className="text-gray-600">
           Control account roles for advisor onboarding and access permissions.
+          Protected developer access remains full-access and cannot be edited here.
         </p>
       </div>
 
@@ -166,7 +168,8 @@ export default function AdminUsersPage() {
                 <tbody>
                   {users.map((user) => {
                     const isCurrentUser = user.id === advisor.id;
-                    const canDemoteCurrent = !isCurrentUser;
+                    const isProtectedDeveloper = Boolean(user.isProtectedDeveloper);
+                    const canDemoteCurrent = !isCurrentUser && !isProtectedDeveloper;
                     const isUpdating = updatingId === user.id;
 
                     return (
@@ -176,19 +179,26 @@ export default function AdminUsersPage() {
                         <td className="py-3 px-2 text-gray-600">{user.organization || '—'}</td>
                         <td className="py-3 px-2 text-gray-600">{user._count.projects}</td>
                         <td className="py-3 px-2">
-                          <span
-                            className={`px-2 py-1 text-xs rounded-full ${
-                              user.role === 'admin'
-                                ? 'bg-emerald-100 text-emerald-800'
-                                : 'bg-gray-100 text-gray-700'
-                            }`}
-                          >
-                            {user.role}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`px-2 py-1 text-xs rounded-full ${
+                                user.role === 'admin'
+                                  ? 'bg-emerald-100 text-emerald-800'
+                                  : 'bg-gray-100 text-gray-700'
+                              }`}
+                            >
+                              {isProtectedDeveloper ? 'developer' : user.role}
+                            </span>
+                            {isProtectedDeveloper && (
+                              <span className="text-xs text-gray-500">Protected</span>
+                            )}
+                          </div>
                         </td>
                         <td className="py-3 px-2 text-gray-600">{formatDate(user.createdAt)}</td>
                         <td className="py-3 px-2 text-right">
-                          {user.role === 'admin' ? (
+                          {isProtectedDeveloper ? (
+                            <span className="text-xs text-gray-500">Protected developer access</span>
+                          ) : user.role === 'admin' ? (
                             canDemoteCurrent ? (
                               <Button
                                 variant="outline"

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { hashPassword, createToken, setAuthCookie } from '@/lib/auth';
+import { hashPassword, createToken, setAuthCookie, toAdvisorPayload } from '@/lib/auth';
 import { cookies } from 'next/headers';
 
 export async function POST(request: NextRequest) {
@@ -104,12 +104,8 @@ export async function POST(request: NextRequest) {
     });
 
     // Create token and set cookie
-    const token = createToken({
-      id: advisor.id,
-      email: advisor.email,
-      name: advisor.name,
-      role: advisor.role,
-    });
+    const sessionAdvisor = toAdvisorPayload(advisor);
+    const token = createToken(sessionAdvisor);
 
     const cookieStore = await cookies();
     const cookie = setAuthCookie(token);
@@ -121,7 +117,7 @@ export async function POST(request: NextRequest) {
         email: advisor.email,
         name: advisor.name,
         organization: advisor.organization,
-        role: advisor.role,
+        role: sessionAdvisor.role,
       },
     });
   } catch (error) {

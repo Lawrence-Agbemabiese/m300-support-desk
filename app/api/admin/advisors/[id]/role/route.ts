@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireAdmin } from '@/lib/access-control';
+import { getEffectiveRole, isProtectedDeveloper } from '@/lib/auth';
 
 const ALLOWED_ROLES = new Set(['advisor', 'admin']);
 
@@ -34,13 +35,20 @@ export async function PATCH(
 
     const target = await prisma.advisor.findUnique({
       where: { id },
-      select: { id: true, role: true },
+      select: { id: true, email: true, name: true, role: true },
     });
 
     if (!target) {
       return NextResponse.json(
         { error: 'Advisor not found' },
         { status: 404 }
+      );
+    }
+
+    if (isProtectedDeveloper(target)) {
+      return NextResponse.json(
+        { error: 'Developer access is protected and cannot be modified here' },
+        { status: 400 }
       );
     }
 
@@ -76,7 +84,13 @@ export async function PATCH(
       },
     });
 
-    return NextResponse.json({ advisor });
+    return NextResponse.json({
+      advisor: {
+        ...advisor,
+        role: getEffectiveRole(advisor),
+        isProtectedDeveloper: isProtectedDeveloper(advisor),
+      },
+    });
   } catch (error) {
     console.error('Error updating advisor role:', error);
     return NextResponse.json(

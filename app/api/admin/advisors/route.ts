@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireAdmin } from '@/lib/access-control';
+import { getEffectiveRole, isProtectedDeveloper } from '@/lib/auth';
 
 // GET - List advisors (admin only)
 export async function GET() {
@@ -26,7 +27,13 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json({ advisors });
+    return NextResponse.json({
+      advisors: advisors.map((advisor) => ({
+        ...advisor,
+        role: getEffectiveRole(advisor),
+        isProtectedDeveloper: isProtectedDeveloper(advisor),
+      })),
+    });
   } catch (error) {
     console.error('Error fetching advisors:', error);
     return NextResponse.json(

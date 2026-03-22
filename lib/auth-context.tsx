@@ -8,6 +8,7 @@ interface Advisor {
   name: string;
   organization: string | null;
   role: string;
+  isProtectedDeveloper?: boolean;
   projectCount?: number;
 }
 

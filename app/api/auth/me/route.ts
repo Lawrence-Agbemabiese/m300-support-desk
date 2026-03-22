@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from '@/lib/auth';
+import { getEffectiveRole, getServerSession, isProtectedDeveloper } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 
 export async function GET() {
@@ -35,7 +35,8 @@ export async function GET() {
       email: advisor.email,
       name: advisor.name,
       organization: advisor.organization,
-      role: advisor.role,
+      role: getEffectiveRole(advisor),
+      isProtectedDeveloper: isProtectedDeveloper(advisor),
       createdAt: advisor.createdAt,
       projectCount: advisor._count.projects,
     },

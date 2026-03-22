@@ -13,6 +13,51 @@ export interface AdvisorPayload {
   role: string;
 }
 
+interface AdvisorIdentity {
+  email?: string | null;
+  name?: string | null;
+  role: string;
+}
+
+const DEFAULT_DEVELOPER_NAME = 'lawrence agbemabiese';
+
+function normalizeIdentityValue(value: string | null | undefined): string {
+  return (value || '').trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+export function isProtectedDeveloper(advisor: Omit<AdvisorIdentity, 'role'>): boolean {
+  const configuredDeveloperName = normalizeIdentityValue(
+    process.env.DEVELOPER_NAME || DEFAULT_DEVELOPER_NAME
+  );
+  const configuredDeveloperEmail = normalizeIdentityValue(process.env.DEVELOPER_EMAIL);
+  const normalizedName = normalizeIdentityValue(advisor.name);
+  const normalizedEmail = normalizeIdentityValue(advisor.email);
+
+  if (configuredDeveloperEmail && normalizedEmail === configuredDeveloperEmail) {
+    return true;
+  }
+
+  return Boolean(configuredDeveloperName) && normalizedName === configuredDeveloperName;
+}
+
+export function getEffectiveRole(advisor: AdvisorIdentity): string {
+  return isProtectedDeveloper(advisor) ? 'admin' : advisor.role;
+}
+
+export function toAdvisorPayload(advisor: {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+}): AdvisorPayload {
+  return {
+    id: advisor.id,
+    email: advisor.email,
+    name: advisor.name,
+    role: getEffectiveRole(advisor),
+  };
+}
+
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 12);
 }
@@ -50,7 +95,7 @@ export async function getServerSession(): Promise<AdvisorPayload | null> {
 
   if (!advisor) return null;
 
-  return advisor;
+  return toAdvisorPayload(advisor);
 }
 
 export function setAuthCookie(token: string) {
