@@ -1,53 +1,46 @@
-# Deployment Guide (Vercel + Supabase)
+# Deployment Guide (Railway + PostgreSQL)
 
-## Environment variables (set in Vercel)
+## Environment variables
 Required:
-- `DATABASE_URL` – Supabase pooled URL (pgbouncer)
-- `DIRECT_URL` – Supabase direct URL (5432)
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY` (server-side only; do **not** expose to client)
+- `DATABASE_URL` – PostgreSQL connection string
+- `DIRECT_URL` – set equal to `DATABASE_URL` unless you have a separate direct migration URL
 - `JWT_SECRET`
 - `CRON_SECRET`
+- `NEXT_PUBLIC_APP_URL`
 - `ANTHROPIC_API_KEY` (only if using enhance mode)
 
 Optional / as used in code:
-- Any other `SUPABASE_*` keys referenced via `process.env`.
+- `DEVELOPER_NAME`
+- `DEVELOPER_EMAIL`
+- `CLAUDE_DEFAULT_MODEL`
+- `CLAUDE_ENHANCED_MODEL`
 
-Do **not** commit `.env.local`; keep secrets in Vercel and GitHub Actions.
+Do **not** commit `.env.local`; keep secrets in Railway.
 
-## Build settings (Vercel)
-- Framework: Next.js
-- Install: `npm install`
-- Build: `npm run build:vercel`
-- Output: `.next`
-- Node: 20 (matches Actions workflow)
+## Railway deployment settings
+- Railway config file: `railway.json`
+- Build command: `npm run build`
+- Pre-deploy command: `npm run prisma:migrate:deploy`
+- Start command: `npm run start`
+- Healthcheck path: `/login`
 
 Important:
-- Vercel should only generate the Prisma client and build the app.
-- Do not run `prisma migrate deploy` inside the Vercel build. Production migrations run in GitHub Actions instead.
+- The app is configured for Next.js standalone output.
+- Railway should run migrations as a pre-deploy command before traffic shifts to the new release.
 
-## Database migrations (Supabase/Postgres)
-- GitHub Action: `.github/workflows/prisma-deploy.yml`
-  - Secrets required in GitHub repo settings:
-    - `SUPABASE_DATABASE_URL` (pooled)
-    - `SUPABASE_DIRECT_URL` (direct 5432)
-  - Triggers:
-    - automatically on pushes to `main` that touch `prisma/**`, `package.json`, `package-lock.json`, or the workflow itself
-    - manually via workflow dispatch when you need to re-run production migrations
-  - Runs `prisma validate`, `prisma migrate deploy`, and `prisma generate` from the app repo root.
-- First-time prod deploy:
-  1) Add GitHub secrets above.
-  2) Trigger the workflow manually (“Deploy Prisma Migrations (Supabase)”).
-  3) Deploy on Vercel; schema will already be in sync.
+## Database setup on Railway
+- Add a PostgreSQL service to the Railway project.
+- In the app service, add reference variable `DATABASE_URL` from the PostgreSQL service.
+- Also set `DIRECT_URL=${{DATABASE_URL}}` for Prisma migrations if no separate migration URL is provided.
 
 ## Durable production flow
 1. Commit Prisma schema and migration files.
-2. Push to `main`.
-3. Let GitHub Actions apply migrations against Supabase.
-4. Let Vercel build with `npm run build:vercel`.
+2. Push to the connected Railway service.
+3. Railway builds the app with `npm run build`.
+4. Railway runs `npm run prisma:migrate:deploy` before starting the new deployment.
+5. Railway starts the app with `npm run start`.
 
-This separation keeps production reliable because Vercel no longer depends on direct database reachability during the build.
+This keeps app deploys and database migrations on the same platform and avoids the Vercel/Supabase connectivity problems that affected the previous setup.
 
 ## Pre-deploy checklist
 - `npm run lint` (only existing warnings: useEffect deps in admin/projects pages)
