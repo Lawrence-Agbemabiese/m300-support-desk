@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
+import { ROLE_CAPABILITIES } from '@/lib/roles';
 
 interface AdvisorRow {
   id: string;
@@ -121,6 +122,38 @@ export default function AdminUsersPage() {
           Control account roles for advisor onboarding and access permissions.
           Protected developer access remains full-access and cannot be edited here.
         </p>
+      </div>
+
+      <div className="mb-6 grid gap-4 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <h2 className="text-lg font-semibold text-gray-900">Advisor permissions</h2>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2 text-sm text-gray-600">
+              {ROLE_CAPABILITIES.advisor.map((capability) => (
+                <li key={capability} className="rounded-xl bg-slate-50 px-4 py-3">
+                  {capability}
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <h2 className="text-lg font-semibold text-gray-900">Admin permissions</h2>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2 text-sm text-gray-600">
+              {ROLE_CAPABILITIES.admin.map((capability) => (
+                <li key={capability} className="rounded-xl bg-emerald-50 px-4 py-3">
+                  {capability}
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
       </div>
 
       {error && (

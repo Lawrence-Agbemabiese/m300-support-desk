@@ -4,6 +4,7 @@ import { requireAdmin } from '@/lib/access-control';
 import { getEffectiveRole, isProtectedDeveloper } from '@/lib/auth';
 import { z } from 'zod';
 import { rejectIfCrossOrigin } from '@/lib/request-security';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 
 const ALLOWED_ROLES = new Set(['advisor', 'admin']);
 const RoleUpdateSchema = z.object({
@@ -22,6 +23,17 @@ export async function PATCH(
     const admin = await requireAdmin();
     if (!admin.ok) return admin.response;
     const { session } = admin;
+    const ip = getClientIp(request);
+    const limit = checkRateLimit(`admin-role-update:${session.id}:${ip}`, {
+      max: 30,
+      windowMs: 10 * 60 * 1000,
+    });
+    if (!limit.allowed) {
+      return NextResponse.json(
+        { error: 'Too many role update requests. Please try again later.' },
+        { status: 429 }
+      );
+    }
 
     const { id } = await params;
     const body = await request.json();

@@ -3,8 +3,9 @@ import jwt from 'jsonwebtoken';
 import { cookies } from 'next/headers';
 import { prisma } from './db';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'm300-support-desk-secret-key-change-in-production';
-const COOKIE_NAME = 'm300_auth_token';
+const FALLBACK_JWT_SECRET = 'm300-support-desk-dev-only-secret';
+const COOKIE_NAME =
+  process.env.NODE_ENV === 'production' ? '__Host-m300_auth_token' : 'm300_auth_token';
 
 export interface AdvisorPayload {
   id: string;
@@ -66,13 +67,27 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
   return bcrypt.compare(password, hash);
 }
 
+function getJwtSecret(): string {
+  const configured = process.env.JWT_SECRET?.trim();
+
+  if (configured && configured !== FALLBACK_JWT_SECRET) {
+    return configured;
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET must be configured in production');
+  }
+
+  return FALLBACK_JWT_SECRET;
+}
+
 export function createToken(advisor: AdvisorPayload): string {
-  return jwt.sign(advisor, JWT_SECRET, { expiresIn: '7d' });
+  return jwt.sign(advisor, getJwtSecret(), { expiresIn: '7d' });
 }
 
 export function verifyToken(token: string): AdvisorPayload | null {
   try {
-    return jwt.verify(token, JWT_SECRET) as AdvisorPayload;
+    return jwt.verify(token, getJwtSecret()) as AdvisorPayload;
   } catch {
     return null;
   }
@@ -105,6 +120,7 @@ export function setAuthCookie(token: string) {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax' as const,
+    priority: 'high' as const,
     maxAge: 60 * 60 * 24 * 7, // 7 days
     path: '/',
   };
@@ -117,6 +133,7 @@ export function clearAuthCookie() {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax' as const,
+    priority: 'high' as const,
     maxAge: 0,
     path: '/',
   };

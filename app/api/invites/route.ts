@@ -141,6 +141,18 @@ export async function DELETE(request: NextRequest) {
 
     const admin = await requireAdmin();
     if (!admin.ok) return admin.response;
+    const { session } = admin;
+    const ip = getClientIp(request);
+    const limit = checkRateLimit(`admin-invites:delete:${session.id}:${ip}`, {
+      max: 40,
+      windowMs: 10 * 60 * 1000,
+    });
+    if (!limit.allowed) {
+      return NextResponse.json(
+        { error: 'Too many invite revocation requests. Please try again later.' },
+        { status: 429 }
+      );
+    }
 
     const { searchParams } = new URL(request.url);
     const parsed = DeleteInviteQuerySchema.safeParse({

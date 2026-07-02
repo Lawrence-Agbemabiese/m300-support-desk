@@ -148,6 +148,27 @@ export default function ProjectsPage() {
         </Link>
       </div>
 
+      {advisor && (advisor.projectCount ?? 0) === 0 && (
+        <Card className="mb-6 border-emerald-200 bg-emerald-50/70">
+          <CardContent className="flex flex-col gap-4 py-5 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">First project in this workspace?</h2>
+              <p className="mt-1 max-w-3xl text-sm text-slate-700">
+                Start with one complete intake, then use the readiness checklist and proposal outline together. The onboarding page explains the recommended workflow and what your role can do.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <Link href="/getting-started">
+                <Button variant="outline">Open Guide</Button>
+              </Link>
+              <Link href="/analyze">
+                <Button>Start Analysis</Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Filters */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-2">

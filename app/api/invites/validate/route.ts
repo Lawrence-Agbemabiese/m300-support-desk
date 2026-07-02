@@ -74,6 +74,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       valid: true,
+      invite: {
+        expiresAt: invite.expiresAt,
+        restrictedToEmail: Boolean(invite.email),
+        remainingUses: Math.max(0, invite.maxUses - invite.useCount),
+      },
     });
   } catch (error) {
     console.error('Error validating invite:', error);
