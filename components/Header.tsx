@@ -32,19 +32,19 @@ export function Header() {
     <header
       className={
         isHome
-          ? 'sticky top-0 z-40 border-b border-white/10 bg-[#162a45]/92 backdrop-blur'
+          ? 'sticky top-0 z-40 border-b border-slate-200 bg-[#f3efe6]/92 backdrop-blur'
           : 'bg-white border-b border-gray-200'
       }
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           <Link href="/" className="flex items-center space-x-3">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isHome ? 'bg-white/10 border border-white/10' : 'bg-emerald-600'}`}>
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isHome ? 'border border-slate-300 bg-white' : 'bg-emerald-600'}`}>
               <span className="text-white font-bold text-lg">M</span>
             </div>
             <div>
-              <h1 className={`text-xl font-extrabold tracking-tight ${isHome ? 'text-white' : 'text-gray-900'}`}>M300 Support Desk</h1>
-              <p className={`text-sm ${isHome ? 'text-slate-300' : 'text-gray-500'}`}>Debt-Sensitive Grant Matching</p>
+              <h1 className={`text-xl font-extrabold tracking-tight ${isHome ? 'text-slate-900' : 'text-gray-900'}`}>M300 Support Desk</h1>
+              <p className={`text-sm ${isHome ? 'text-slate-600' : 'text-gray-500'}`}>Debt-Sensitive Grant Matching</p>
             </div>
           </Link>
 
@@ -56,7 +56,7 @@ export function Header() {
                   href={item.href}
                   className={`px-3 py-2 text-sm font-semibold rounded-full transition-colors ${
                     isHome
-                      ? 'text-slate-100 hover:bg-white/10'
+                      ? 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900'
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
@@ -68,7 +68,7 @@ export function Header() {
                   <Link
                     href="/admin/grants"
                     className={`px-3 py-2 text-sm font-semibold rounded-full transition-colors ${
-                      isHome ? 'text-slate-100 hover:bg-white/10' : 'text-gray-600 hover:text-gray-900'
+                      isHome ? 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900' : 'text-gray-600 hover:text-gray-900'
                     }`}
                   >
                     Grant Discovery
@@ -76,7 +76,7 @@ export function Header() {
                   <Link
                     href="/admin/invites"
                     className={`px-3 py-2 text-sm font-semibold rounded-full transition-colors ${
-                      isHome ? 'text-slate-100 hover:bg-white/10' : 'text-gray-600 hover:text-gray-900'
+                      isHome ? 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900' : 'text-gray-600 hover:text-gray-900'
                     }`}
                   >
                     Invites
@@ -84,7 +84,7 @@ export function Header() {
                   <Link
                     href="/admin/users"
                     className={`px-3 py-2 text-sm font-semibold rounded-full transition-colors ${
-                      isHome ? 'text-slate-100 hover:bg-white/10' : 'text-gray-600 hover:text-gray-900'
+                      isHome ? 'text-slate-700 hover:bg-slate-900/5 hover:text-slate-900' : 'text-gray-600 hover:text-gray-900'
                     }`}
                   >
                     Users
@@ -93,15 +93,15 @@ export function Header() {
               )}
             </nav>
 
-            <div className={`pl-4 flex items-center space-x-3 ${isHome ? 'border-l border-white/10' : 'border-l border-gray-200'}`}>
+            <div className={`pl-4 flex items-center space-x-3 ${isHome ? 'border-l border-slate-300' : 'border-l border-gray-200'}`}>
               {loading ? (
                 <div className="w-20 h-8 bg-gray-100 animate-pulse rounded" />
               ) : advisor ? (
                 <>
                   <div className="text-sm text-right">
-                    <div className={`font-medium ${isHome ? 'text-white' : 'text-gray-900'}`}>{advisor.name}</div>
+                    <div className={`font-medium ${isHome ? 'text-slate-900' : 'text-gray-900'}`}>{advisor.name}</div>
                     {advisor.organization && (
-                      <div className={`${isHome ? 'text-slate-300' : 'text-gray-500'} text-xs`}>{advisor.organization}</div>
+                      <div className={`${isHome ? 'text-slate-600' : 'text-gray-500'} text-xs`}>{advisor.organization}</div>
                     )}
                   </div>
                   {isHome && (
@@ -114,7 +114,7 @@ export function Header() {
                   )}
                   <button
                     onClick={handleLogout}
-                    className={`px-3 py-2 text-sm font-semibold ${isHome ? 'text-slate-100 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}
+                    className={`px-3 py-2 text-sm font-semibold ${isHome ? 'text-slate-700 hover:text-slate-900' : 'text-gray-600 hover:text-gray-900'}`}
                   >
                     Logout
                   </button>
@@ -123,7 +123,7 @@ export function Header() {
                 <>
                   <Link
                     href="/login"
-                    className={`px-3 py-2 text-sm font-semibold ${isHome ? 'text-slate-100 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}
+                    className={`px-3 py-2 text-sm font-semibold ${isHome ? 'text-slate-700 hover:text-slate-900' : 'text-gray-600 hover:text-gray-900'}`}
                   >
                     Sign In
                   </Link>

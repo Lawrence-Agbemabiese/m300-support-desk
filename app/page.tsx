@@ -69,18 +69,18 @@ const faqs = [
 export default function Home() {
   return (
     <div className="bg-[#f7f5ef]">
-      <section className="landing-grid overflow-hidden bg-[radial-gradient(circle_at_top_right,rgba(55,145,161,0.45),transparent_34%),linear-gradient(180deg,#183154_0%,#143052_64%,#132d4d_100%)] text-white">
+      <section className="landing-grid overflow-hidden bg-[#f3efe6]">
         <div className="mx-auto max-w-7xl px-4 pb-24 pt-16 sm:px-6 lg:px-8 lg:pb-28 lg:pt-24">
           <div className="max-w-5xl">
-            <div className="inline-flex items-center rounded-full border border-white/16 bg-white/10 px-5 py-2 text-sm font-semibold text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.09)]">
+            <div className="inline-flex items-center rounded-full border border-slate-300 bg-white/70 px-5 py-2 text-sm font-semibold text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]">
               Mission 300 support desk · scored to debt-sensitive grant fit
             </div>
 
-            <h1 className="mt-10 max-w-5xl text-5xl font-extrabold leading-[0.95] tracking-[-0.055em] text-white sm:text-6xl lg:text-7xl">
+            <h1 className="mt-10 max-w-5xl text-5xl font-extrabold leading-[0.95] tracking-[-0.055em] text-slate-900 sm:text-6xl lg:text-7xl">
               Fund only the community energy projects you can actually carry to submission.
             </h1>
 
-            <p className="mt-8 max-w-4xl text-xl leading-[1.65] text-slate-200 sm:text-[2rem] sm:leading-[1.55]">
+            <p className="mt-8 max-w-4xl text-xl leading-[1.65] text-slate-600 sm:text-[2rem] sm:leading-[1.55]">
               M300 Support Desk captures project intake, scores Mission 300 alignment,
               flags debt-sensitive risks, and shows what evidence still needs to exist
               before a grant application is credible. Signal over noise, not another
@@ -99,7 +99,7 @@ export default function Home() {
               </Link>
             </div>
 
-            <p className="mt-5 text-base text-slate-300">
+            <p className="mt-5 text-base text-slate-600">
               Invite-only workspace. Use the sample projects below to guide first-time users before they enter a live record.
             </p>
           </div>
