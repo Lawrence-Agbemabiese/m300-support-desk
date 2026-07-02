@@ -1,10 +1,10 @@
 import type { Metadata } from 'next';
-import { Manrope } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/lib/auth-context';
 import { Header } from '@/components/Header';
 
-const manrope = Manrope({ subsets: ['latin'] });
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'M300 Support Desk',
@@ -18,9 +18,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={manrope.className}>
+      <body className={inter.className}>
         <AuthProvider>
-          <div className="min-h-screen bg-[var(--surface-base)] text-slate-950">
+          <div className="min-h-screen bg-gray-50">
             <Header />
             <main>{children}</main>
           </div>

@@ -3,25 +3,27 @@
 @tailwind utilities;
 
 :root {
-  --surface-base: #f3efe6;
-  --surface-card: #fffdf7;
-  --surface-ink: #162a45;
-  --surface-ink-soft: #203b63;
-  --surface-line: rgba(120, 139, 166, 0.24);
-  --accent-mint: #6ed0bf;
-  --accent-gold: #efb540;
-  --accent-rose: #f08f74;
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 249, 250, 251;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 17, 24, 39;
+    --background-end-rgb: 31, 41, 55;
+  }
 }
 
 body {
-  color: #0f172a;
-  background:
-    radial-gradient(circle at top left, rgba(110, 208, 191, 0.08), transparent 26%),
-    linear-gradient(180deg, #f7f3eb 0%, var(--surface-base) 65%, #f0ebdf 100%);
-}
-
-html {
-  scroll-behavior: smooth;
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
 }
 
 @layer utilities {
@@ -31,18 +33,5 @@ html {
 
   .score-gauge-fill {
     @apply absolute left-0 top-0 h-full rounded-full transition-all duration-500;
-  }
-
-  .landing-grid {
-    background-image:
-      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-    background-size: 32px 32px;
-  }
-
-  .landing-glow {
-    box-shadow:
-      0 24px 80px rgba(4, 16, 34, 0.28),
-      inset 0 1px 0 rgba(255, 255, 255, 0.08);
   }
 }
