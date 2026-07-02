@@ -6,233 +6,160 @@ const sampleProjects = [
     name: 'Sample Project (Mid-Stage): Beposo Community Solar Mini-Grid',
     readiness: 'Major work needed',
     summary:
-      'Useful for first-time users who need to understand what draft evidence, partial endorsements, and missing budget work look like.',
-    tags: ['Ghana', 'Solar mini-grid', 'Mid-stage', 'Mixed readiness'],
+      'Use this one to show new advisors what partial evidence, missing budget support, and draft endorsements look like.',
   },
   {
     id: 'cmr3k5rl60003cgd2jp8bbclz',
     name: 'Sample Project (Submission-Ready): Adumkrom Community Solar Mini-Grid',
     readiness: 'Ready to submit',
     summary:
-      'Shows a stronger intake with documented land, demand, budget, and timeline evidence so users can compare what “good” looks like.',
-    tags: ['Ghana', 'Solar mini-grid', 'Submission-ready', 'Grant-first'],
+      'Use this one to show what a stronger Ghana mini-grid submission looks like once most critical evidence is already documented.',
   },
 ];
 
 const workflowSteps = [
   {
-    title: 'Capture the project signal',
-    body: 'Enter site, ownership, productive-use, and readiness evidence details in one structured intake.',
+    title: 'Capture one structured intake',
+    body: 'Project site, ownership, productive-use, cost, and readiness evidence are collected in a single advisor workflow.',
   },
   {
-    title: 'Score for Mission 300 fit',
-    body: 'The platform classifies debt sensitivity, local ownership strength, and grant suitability in one pass.',
+    title: 'Score Mission 300 alignment',
+    body: 'The platform classifies debt sensitivity, grant suitability, and local ownership strength immediately.',
   },
   {
-    title: 'Surface credible funders',
-    body: 'Grant matches are ranked against geography, instrument fit, ownership model, and likely eligibility.',
+    title: 'Match against grant pathways',
+    body: 'Funders are ranked against geography, instrument fit, ownership model, and probable eligibility.',
   },
   {
-    title: 'Turn analysis into action',
-    body: 'Proposal guidance, readiness questions, and checklist gaps become the next work plan for advisors.',
+    title: 'Turn gaps into next steps',
+    body: 'Proposal sections, readiness gaps, and questions-to-answer become the actual work plan for the team.',
   },
 ];
 
 const audiences = [
   {
-    title: 'Advisors onboarding quickly',
-    body: 'Use the samples and structured intake to understand the level of evidence the platform expects.',
+    title: 'First-time advisors',
+    body: 'Learn quickly what evidence the platform expects and how project quality changes the readiness result.',
   },
   {
-    title: 'Project developers reducing noise',
-    body: 'Focus on grant-first pathways that protect fiscal space instead of wasting cycles on weak-fit capital.',
+    title: 'Project developers',
+    body: 'Prioritize grant-first, debt-sensitive pathways instead of spending time on poor-fit capital options.',
   },
   {
-    title: 'Review teams spotting risk early',
-    body: 'See debt sensitivity, readiness gaps, and proposal weaknesses before a project reaches a funder desk.',
+    title: 'Review teams',
+    body: 'Spot weak documentation, missing approvals, and proposal risks early before a funder sees the file.',
   },
 ];
 
 const faqs = [
   {
-    q: 'Is the platform public?',
-    a: 'No. Registration is invite-only so access can stay limited to your trusted project and advisor group.',
+    q: 'Is access public?',
+    a: 'No. The workspace is invite-only so you can keep access limited to trusted colleagues and advisors.',
   },
   {
-    q: 'What do the sample projects do?',
-    a: 'They show new users what a mid-stage intake looks like versus a stronger submission-ready record, using realistic but fictional Ghana mini-grid projects.',
+    q: 'What do the sample projects show?',
+    a: 'They provide a realistic Ghana mini-grid example at two different readiness levels so new users can understand the platform quickly.',
   },
   {
-    q: 'Does the platform replace technical diligence?',
-    a: 'No. It accelerates early screening, funder matching, and readiness coaching, but real diligence still depends on supporting documents and review.',
+    q: 'Does this replace technical diligence?',
+    a: 'No. It sharpens early screening and proposal preparation, but real diligence still depends on documents, engineering, and review.',
   },
 ];
 
 export default function Home() {
   return (
-    <div>
-      <section className="landing-grid overflow-hidden bg-[#162a45] text-white">
-        <div className="mx-auto max-w-7xl px-4 pb-24 pt-12 sm:px-6 lg:px-8 lg:pb-28 lg:pt-16">
-          <div className="grid gap-12 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
-            <div className="max-w-3xl">
-              <div className="inline-flex items-center rounded-full border border-white/15 bg-white/8 px-4 py-2 text-sm font-semibold text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]">
-                Mission 300 • grant-first energy project screening
-              </div>
-              <h1 className="mt-8 max-w-4xl text-5xl font-extrabold leading-[0.94] tracking-[-0.05em] text-white sm:text-6xl lg:text-7xl">
-                Build only the energy projects communities can actually fund and sustain.
-              </h1>
-              <p className="mt-8 max-w-3xl text-lg leading-8 text-slate-200 sm:text-xl">
-                M300 Support Desk helps advisors turn raw project concepts into debt-sensitive,
-                funder-ready mini-grid cases. Capture the intake once, score Mission 300 fit,
-                expose readiness gaps, and move toward credible grant submissions faster.
-              </p>
-              <div className="mt-10 flex flex-col gap-4 sm:flex-row">
-                <Link
-                  href="/analyze"
-                  className="inline-flex items-center justify-center rounded-2xl bg-[#efb540] px-6 py-4 text-base font-extrabold text-slate-950 transition hover:bg-[#f3c15b]"
-                >
-                  Start an analysis
-                </Link>
-                <Link
-                  href="#samples"
-                  className="inline-flex items-center justify-center rounded-2xl border border-white/15 bg-white/8 px-6 py-4 text-base font-bold text-white transition hover:bg-white/12"
-                >
-                  Review sample projects
-                </Link>
-              </div>
-              <p className="mt-4 text-sm text-slate-300">
-                Invite-only workspace. Built for advisors, project developers, and review teams working on African energy access.
-              </p>
+    <div className="bg-[#f7f5ef]">
+      <section className="landing-grid overflow-hidden bg-[radial-gradient(circle_at_top_right,rgba(55,145,161,0.45),transparent_34%),linear-gradient(180deg,#183154_0%,#143052_64%,#132d4d_100%)] text-white">
+        <div className="mx-auto max-w-7xl px-4 pb-24 pt-16 sm:px-6 lg:px-8 lg:pb-28 lg:pt-24">
+          <div className="max-w-5xl">
+            <div className="inline-flex items-center rounded-full border border-white/16 bg-white/10 px-5 py-2 text-sm font-semibold text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.09)]">
+              Mission 300 support desk · scored to debt-sensitive grant fit
             </div>
 
-            <div className="relative">
-              <div className="absolute -left-10 top-12 h-40 w-40 rounded-full bg-[#6ed0bf]/20 blur-3xl" />
-              <div className="absolute right-2 top-0 h-48 w-48 rounded-full bg-[#efb540]/12 blur-3xl" />
-              <div className="landing-glow relative rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(22,42,69,0.96),rgba(14,28,48,0.94))] p-5">
-                <div className="flex items-center justify-between border-b border-white/10 pb-4">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.22em] text-slate-300">Guided workspace</p>
-                    <h2 className="mt-2 text-2xl font-extrabold tracking-tight text-white">
-                      What first-time users should notice
-                    </h2>
-                  </div>
-                  <div className="rounded-full border border-[#6ed0bf]/30 bg-[#6ed0bf]/12 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-[#9fe6da]">
-                    Sample mode
-                  </div>
-                </div>
+            <h1 className="mt-10 max-w-5xl text-5xl font-extrabold leading-[0.95] tracking-[-0.055em] text-white sm:text-6xl lg:text-7xl">
+              Fund only the community energy projects you can actually carry to submission.
+            </h1>
 
-                <div className="mt-5 space-y-4">
-                  <div className="rounded-2xl border border-emerald-300/20 bg-white/6 p-4">
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <p className="text-sm font-bold text-white">M300 alignment</p>
-                        <p className="mt-1 text-sm text-slate-300">
-                          Score ownership, grant fit, and debt sensitivity before proposal drafting.
-                        </p>
-                      </div>
-                      <div className="rounded-2xl bg-[#6ed0bf] px-4 py-3 text-center text-slate-950">
-                        <div className="text-3xl font-extrabold leading-none">100</div>
-                        <div className="mt-1 text-[11px] font-bold uppercase tracking-[0.18em]">Tier 1</div>
-                      </div>
-                    </div>
-                  </div>
+            <p className="mt-8 max-w-4xl text-xl leading-[1.65] text-slate-200 sm:text-[2rem] sm:leading-[1.55]">
+              M300 Support Desk captures project intake, scores Mission 300 alignment,
+              flags debt-sensitive risks, and shows what evidence still needs to exist
+              before a grant application is credible. Signal over noise, not another
+              spreadsheet graveyard.
+            </p>
 
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    {sampleProjects.map((project) => (
-                      <div
-                        key={project.id}
-                        className="rounded-2xl border border-white/10 bg-white/5 p-4"
-                      >
-                        <div className="flex items-center justify-between gap-3">
-                          <p className="text-sm font-bold text-white">{project.readiness}</p>
-                          <span className="rounded-full bg-white/10 px-2 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-200">
-                            sample
-                          </span>
-                        </div>
-                        <p className="mt-3 text-sm leading-6 text-slate-300">{project.name}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                    <p className="text-sm font-bold text-white">Readiness coaching</p>
-                    <ul className="mt-3 space-y-3 text-sm text-slate-300">
-                      <li>Critical gaps stay visible until evidence is explicit and documented.</li>
-                      <li>Partial items trigger precise “what remains?” questions instead of vague prompts.</li>
-                      <li>Proposal sections stay synced with the actual backend-calculated readiness state.</li>
-                    </ul>
-                  </div>
-                </div>
+            <div className="mt-12 flex max-w-3xl flex-col gap-4 sm:flex-row">
+              <div className="flex min-h-[72px] flex-1 items-center rounded-2xl border border-slate-200/15 bg-white px-6 text-lg font-medium text-slate-500 shadow-[0_10px_30px_rgba(0,0,0,0.12)]">
+                Ghana solar mini-grid · sample intake ready
               </div>
+              <Link
+                href="/analyze"
+                className="inline-flex min-h-[72px] items-center justify-center rounded-2xl bg-[#f4af21] px-8 text-lg font-extrabold text-slate-950 transition hover:bg-[#f7bb43]"
+              >
+                Start the analysis
+              </Link>
             </div>
+
+            <p className="mt-5 text-base text-slate-300">
+              Invite-only workspace. Use the sample projects below to guide first-time users before they enter a live record.
+            </p>
           </div>
         </div>
       </section>
 
-      <section
-        id="how"
-        className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8"
-      >
+      <section id="how" className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         <div className="max-w-3xl">
-          <p className="text-sm font-extrabold uppercase tracking-[0.22em] text-[#1f8a7c]">
+          <p className="text-sm font-extrabold uppercase tracking-[0.24em] text-[#24a29a]">
             How it works
           </p>
-          <h2 className="mt-4 text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
-            One workflow from intake to funder-facing readiness.
+          <h2 className="mt-5 text-4xl font-extrabold tracking-[-0.045em] text-slate-900 sm:text-6xl">
+            From raw project notes to your three best next moves.
           </h2>
-          <p className="mt-5 text-lg leading-8 text-slate-600">
-            The platform is designed to reduce guesswork. It does not just score a project; it
-            shows what still needs to be evidenced before a real submission is credible.
-          </p>
         </div>
 
-        <div className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-14 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
           {workflowSteps.map((step, index) => (
             <div
               key={step.title}
-              className="rounded-[26px] border border-[var(--surface-line)] bg-[var(--surface-card)] p-6 shadow-[0_18px_50px_rgba(33,45,66,0.08)]"
+              className="rounded-[28px] border border-slate-900/8 bg-white p-7 shadow-[0_20px_60px_rgba(20,35,55,0.08)]"
             >
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#162a45] text-sm font-extrabold text-white">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#163154] text-sm font-extrabold text-white">
                 0{index + 1}
               </div>
-              <h3 className="mt-5 text-xl font-extrabold tracking-tight text-slate-900">
+              <h3 className="mt-5 text-2xl font-extrabold tracking-[-0.03em] text-slate-900">
                 {step.title}
               </h3>
-              <p className="mt-3 text-sm leading-7 text-slate-600">{step.body}</p>
+              <p className="mt-4 text-base leading-8 text-slate-600">{step.body}</p>
             </div>
           ))}
         </div>
       </section>
 
-      <section
-        id="audience"
-        className="border-y border-slate-900/6 bg-[rgba(255,253,247,0.72)]"
-      >
+      <section id="audience" className="border-y border-slate-900/6 bg-[#fbf8f1]">
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-          <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr]">
-            <div>
-              <p className="text-sm font-extrabold uppercase tracking-[0.22em] text-[#1f8a7c]">
-                Who it’s for
+          <div className="grid gap-14 lg:grid-cols-[0.88fr_1.12fr]">
+            <div className="max-w-2xl">
+              <p className="text-sm font-extrabold uppercase tracking-[0.24em] text-[#24a29a]">
+                Who it&apos;s for
               </p>
-              <h2 className="mt-4 text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
-                Built for people who need sharper early-stage decisions.
+              <h2 className="mt-5 text-4xl font-extrabold tracking-[-0.045em] text-slate-900 sm:text-6xl">
+                Built for teams that need sharper early-stage judgment.
               </h2>
-              <p className="mt-5 text-lg leading-8 text-slate-600">
-                The value is not more data for its own sake. The value is a cleaner signal
-                about whether a project is fundable, what evidence is still missing, and which
-                grant pathways deserve time.
+              <p className="mt-6 text-lg leading-9 text-slate-600">
+                The point is not to decorate a project. The point is to identify whether it is
+                fundable, what is missing, and which grant pathways deserve the team&apos;s time.
               </p>
             </div>
-            <div className="grid gap-5 md:grid-cols-3">
+
+            <div className="grid gap-6 md:grid-cols-3">
               {audiences.map((audience) => (
                 <div
                   key={audience.title}
-                  className="rounded-[26px] border border-[var(--surface-line)] bg-[var(--surface-card)] p-6"
+                  className="rounded-[28px] border border-slate-900/8 bg-white p-7"
                 >
-                  <h3 className="text-xl font-extrabold tracking-tight text-slate-900">
+                  <h3 className="text-2xl font-extrabold tracking-[-0.03em] text-slate-900">
                     {audience.title}
                   </h3>
-                  <p className="mt-4 text-sm leading-7 text-slate-600">{audience.body}</p>
+                  <p className="mt-4 text-base leading-8 text-slate-600">{audience.body}</p>
                 </div>
               ))}
             </div>
@@ -240,68 +167,46 @@ export default function Home() {
         </div>
       </section>
 
-      <section
-        id="samples"
-        className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8"
-      >
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-3xl">
-            <p className="text-sm font-extrabold uppercase tracking-[0.22em] text-[#1f8a7c]">
-              Sample projects
-            </p>
-            <h2 className="mt-4 text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
-              Two guided examples for first-time users.
-            </h2>
-            <p className="mt-5 text-lg leading-8 text-slate-600">
-              These records live in the platform right now. Use them to understand how the same
-              type of Ghana solar mini-grid project looks at two different readiness levels.
-            </p>
-          </div>
-          <div className="rounded-2xl border border-slate-900/10 bg-white/80 px-4 py-3 text-sm text-slate-600">
-            Sign in first to open the sample project detail pages.
-          </div>
+      <section id="samples" className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+        <div className="max-w-3xl">
+          <p className="text-sm font-extrabold uppercase tracking-[0.24em] text-[#24a29a]">
+            Sample
+          </p>
+          <h2 className="mt-5 text-4xl font-extrabold tracking-[-0.045em] text-slate-900 sm:text-6xl">
+            Two realistic projects for onboarding and demos.
+          </h2>
+          <p className="mt-6 text-lg leading-9 text-slate-600">
+            Both examples already exist in the platform. Use them to show users the difference
+            between a project that still needs material work and one that is materially stronger.
+          </p>
         </div>
 
-        <div className="mt-12 grid gap-6 lg:grid-cols-2">
+        <div className="mt-14 grid gap-6 lg:grid-cols-2">
           {sampleProjects.map((project, index) => (
             <div
               key={project.id}
-              className="rounded-[30px] border border-[var(--surface-line)] bg-[var(--surface-card)] p-7 shadow-[0_24px_80px_rgba(25,37,57,0.08)]"
+              className="rounded-[30px] border border-slate-900/8 bg-white p-8 shadow-[0_20px_60px_rgba(20,35,55,0.08)]"
             >
               <div className="flex items-center justify-between gap-4">
-                <span className="rounded-full bg-[#162a45] px-3 py-1 text-xs font-extrabold uppercase tracking-[0.2em] text-white">
+                <span className="rounded-full bg-[#163154] px-3 py-1 text-xs font-extrabold uppercase tracking-[0.2em] text-white">
                   Sample 0{index + 1}
                 </span>
-                <span className="rounded-full bg-[#efb540]/20 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-[#8a5a00]">
+                <span className="rounded-full bg-[#dff5ef] px-3 py-1 text-xs font-extrabold uppercase tracking-[0.18em] text-[#1a7a70]">
                   {project.readiness}
                 </span>
               </div>
-              <h3 className="mt-6 text-3xl font-extrabold tracking-tight text-slate-900">
+
+              <h3 className="mt-6 text-3xl font-extrabold tracking-[-0.04em] text-slate-900">
                 {project.name}
               </h3>
-              <p className="mt-4 text-base leading-8 text-slate-600">{project.summary}</p>
-              <div className="mt-6 flex flex-wrap gap-2">
-                {project.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full border border-slate-900/10 bg-slate-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-slate-600"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-              <div className="mt-8 flex flex-wrap gap-3">
+              <p className="mt-5 text-base leading-8 text-slate-600">{project.summary}</p>
+
+              <div className="mt-8">
                 <Link
                   href={`/projects/${project.id}`}
-                  className="inline-flex items-center justify-center rounded-2xl bg-[#162a45] px-5 py-3 text-sm font-extrabold text-white transition hover:bg-[#203b63]"
+                  className="inline-flex items-center justify-center rounded-2xl bg-[#163154] px-6 py-4 text-base font-extrabold text-white transition hover:bg-[#204069]"
                 >
                   Open sample project
-                </Link>
-                <Link
-                  href="/analyze"
-                  className="inline-flex items-center justify-center rounded-2xl border border-slate-900/10 bg-white px-5 py-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
-                >
-                  Start your own analysis
                 </Link>
               </div>
             </div>
@@ -309,27 +214,27 @@ export default function Home() {
         </div>
       </section>
 
-      <section
-        id="faq"
-        className="border-t border-slate-900/8 bg-[rgba(255,253,247,0.72)]"
-      >
+      <section id="faq" className="border-t border-slate-900/8 bg-[#fbf8f1]">
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
-            <p className="text-sm font-extrabold uppercase tracking-[0.22em] text-[#1f8a7c]">
+            <p className="text-sm font-extrabold uppercase tracking-[0.24em] text-[#24a29a]">
               FAQ
             </p>
-            <h2 className="mt-4 text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
-              A few things users ask immediately.
+            <h2 className="mt-5 text-4xl font-extrabold tracking-[-0.045em] text-slate-900 sm:text-6xl">
+              A few fast answers for new users.
             </h2>
           </div>
-          <div className="mt-12 grid gap-5 lg:grid-cols-3">
+
+          <div className="mt-14 grid gap-6 lg:grid-cols-3">
             {faqs.map((faq) => (
               <div
                 key={faq.q}
-                className="rounded-[26px] border border-[var(--surface-line)] bg-[var(--surface-card)] p-6"
+                className="rounded-[28px] border border-slate-900/8 bg-white p-7"
               >
-                <h3 className="text-xl font-extrabold tracking-tight text-slate-900">{faq.q}</h3>
-                <p className="mt-4 text-sm leading-7 text-slate-600">{faq.a}</p>
+                <h3 className="text-2xl font-extrabold tracking-[-0.03em] text-slate-900">
+                  {faq.q}
+                </h3>
+                <p className="mt-4 text-base leading-8 text-slate-600">{faq.a}</p>
               </div>
             ))}
           </div>
