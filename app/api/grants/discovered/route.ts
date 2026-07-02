@@ -1,6 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireAdmin } from '@/lib/access-control';
+import { z } from 'zod';
+
+const statusValues = ['pending', 'approved', 'rejected', 'duplicate', 'all'] as const;
+const QuerySchema = z.object({
+  status: z.enum(statusValues).optional(),
+  limit: z.preprocess(
+    (value) => (value === undefined ? 50 : Number(value)),
+    z.number().int().min(1).max(100)
+  ),
+  offset: z.preprocess(
+    (value) => (value === undefined ? 0 : Number(value)),
+    z.number().int().min(0)
+  ),
+});
 
 // GET - List discovered grants
 export async function GET(request: NextRequest) {
@@ -9,9 +23,18 @@ export async function GET(request: NextRequest) {
     if (!admin.ok) return admin.response;
 
     const searchParams = request.nextUrl.searchParams;
-    const status = searchParams.get('status') || 'pending';
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const parsed = QuerySchema.safeParse({
+      status: searchParams.get('status') || 'pending',
+      limit: searchParams.get('limit') ?? undefined,
+      offset: searchParams.get('offset') ?? undefined,
+    });
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid query parameters' },
+        { status: 400 }
+      );
+    }
+    const { status, limit, offset } = parsed.data;
 
     const where = status === 'all' ? {} : { status };
 

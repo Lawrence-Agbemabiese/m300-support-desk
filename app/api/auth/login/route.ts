@@ -2,23 +2,56 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { verifyPassword, createToken, setAuthCookie, toAdvisorPayload } from '@/lib/auth';
 import { cookies } from 'next/headers';
+import { z } from 'zod';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import { rejectIfCrossOrigin } from '@/lib/request-security';
+
+const LoginSchema = z.object({
+  email: z.string().email().transform((value) => value.trim().toLowerCase()),
+  password: z.string().min(1).max(128),
+});
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { email, password } = body;
+    const originError = rejectIfCrossOrigin(request);
+    if (originError) return originError;
 
-    // Validate input
-    if (!email || !password) {
+    const ip = getClientIp(request);
+    const ipLimit = checkRateLimit(`auth-login:ip:${ip}`, {
+      max: 30,
+      windowMs: 10 * 60 * 1000,
+    });
+    if (!ipLimit.allowed) {
       return NextResponse.json(
-        { error: 'Email and password are required' },
+        { error: 'Too many login attempts. Please try again later.' },
+        { status: 429 }
+      );
+    }
+
+    const body = await request.json();
+    const parsed = LoginSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'A valid email and password are required' },
         { status: 400 }
+      );
+    }
+
+    const { email, password } = parsed.data;
+    const emailLimit = checkRateLimit(`auth-login:email:${email}`, {
+      max: 10,
+      windowMs: 10 * 60 * 1000,
+    });
+    if (!emailLimit.allowed) {
+      return NextResponse.json(
+        { error: 'Too many login attempts. Please try again later.' },
+        { status: 429 }
       );
     }
 
     // Find advisor
     const advisor = await prisma.advisor.findUnique({
-      where: { email: email.toLowerCase() },
+      where: { email },
     });
 
     if (!advisor) {

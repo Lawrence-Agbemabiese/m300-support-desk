@@ -3,6 +3,9 @@ import Anthropic from '@anthropic-ai/sdk';
 import { prisma } from '@/lib/db';
 import { grants } from '@/lib/data/grants';
 import { requireAdmin } from '@/lib/access-control';
+import { z } from 'zod';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import { rejectIfCrossOrigin } from '@/lib/request-security';
 
 const DISCOVERY_PROMPT = `You are a grant funding research assistant specializing in African energy access programs. Your task is to identify NEW grant funding opportunities that are NOT already in our database.
 
@@ -51,19 +54,42 @@ IMPORTANT:
 
 export async function POST(request: NextRequest) {
   try {
+    const originError = rejectIfCrossOrigin(request);
+    if (originError) return originError;
+
     const admin = await requireAdmin();
     if (!admin.ok) return admin.response;
     const { session } = admin;
 
-    const body = await request.json();
-    const { query, region } = body;
-
-    if (!query) {
+    const ip = getClientIp(request);
+    const ipLimit = checkRateLimit(`grant-discover:ip:${ip}`, {
+      max: 12,
+      windowMs: 10 * 60 * 1000,
+    });
+    const userLimit = checkRateLimit(`grant-discover:user:${session.id}`, {
+      max: 8,
+      windowMs: 10 * 60 * 1000,
+    });
+    if (!ipLimit.allowed || !userLimit.allowed) {
       return NextResponse.json(
-        { error: 'Search query is required' },
+        { error: 'Too many discovery requests. Please try again later.' },
+        { status: 429 }
+      );
+    }
+
+    const RequestSchema = z.object({
+      query: z.string().trim().min(3).max(300),
+      region: z.string().trim().min(2).max(120).optional(),
+    });
+    const body = await request.json();
+    const parsed = RequestSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid discovery request payload' },
         { status: 400 }
       );
     }
+    const { query, region } = parsed.data;
 
     // Check if Anthropic API is configured
     if (!process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY === 'sk-ant-...') {

@@ -4,11 +4,33 @@ import { interpretPolicy } from '@/lib/agents/policy-interpreter';
 import { enhanceNarrative, isConfigured } from '@/lib/llm/client';
 import { M300_SYSTEM_PROMPT, getPolicyEnhancementPrompt } from '@/lib/llm/prompts';
 import { requireAuth } from '@/lib/access-control';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import { rejectIfCrossOrigin } from '@/lib/request-security';
 
 export async function POST(request: NextRequest) {
   try {
+    const originError = rejectIfCrossOrigin(request);
+    if (originError) return originError;
+
     const auth = await requireAuth();
     if (!auth.ok) return auth.response;
+    const { session } = auth;
+
+    const ip = getClientIp(request);
+    const ipLimit = checkRateLimit(`policy:ip:${ip}`, {
+      max: 60,
+      windowMs: 10 * 60 * 1000,
+    });
+    const userLimit = checkRateLimit(`policy:user:${session.id}`, {
+      max: 30,
+      windowMs: 10 * 60 * 1000,
+    });
+    if (!ipLimit.allowed || !userLimit.allowed) {
+      return NextResponse.json(
+        { error: 'Too many policy requests. Please try again later.' },
+        { status: 429 }
+      );
+    }
 
     const body = await request.json();
 

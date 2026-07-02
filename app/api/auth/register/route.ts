@@ -2,105 +2,139 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { hashPassword, createToken, setAuthCookie, toAdvisorPayload } from '@/lib/auth';
 import { cookies } from 'next/headers';
+import { Prisma } from '@prisma/client';
+import { z } from 'zod';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import { rejectIfCrossOrigin } from '@/lib/request-security';
+
+const RegisterSchema = z.object({
+  email: z.string().email().transform((value) => value.trim().toLowerCase()),
+  password: z.string().min(8).max(128),
+  name: z.string().trim().min(2).max(120),
+  organization: z.string().trim().max(200).optional(),
+  inviteCode: z
+    .string()
+    .trim()
+    .min(6)
+    .max(32)
+    .regex(/^[A-Z0-9]+$/i)
+    .transform((value) => value.toUpperCase()),
+});
+
+const INVITE_ERROR = 'Invalid or unavailable invite code';
+
+class RegistrationError extends Error {
+  status: number;
+
+  constructor(message: string, status = 400) {
+    super(message);
+    this.status = status;
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
+    const originError = rejectIfCrossOrigin(request);
+    if (originError) return originError;
+
+    const ip = getClientIp(request);
+    const ipLimit = checkRateLimit(`auth-register:ip:${ip}`, {
+      max: 20,
+      windowMs: 15 * 60 * 1000,
+    });
+    if (!ipLimit.allowed) {
+      return NextResponse.json(
+        { error: 'Too many registration attempts. Please try again later.' },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json();
-    const { email, password, name, organization, inviteCode } = body;
-
-    // Validate input
-    if (!email || !password || !name) {
+    const parsed = RegisterSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Email, password, and name are required' },
+        { error: 'Please provide valid registration details.' },
         { status: 400 }
       );
     }
 
-    if (!inviteCode) {
-      return NextResponse.json(
-        { error: 'Invite code is required to register' },
-        { status: 400 }
-      );
-    }
-
-    if (password.length < 8) {
-      return NextResponse.json(
-        { error: 'Password must be at least 8 characters' },
-        { status: 400 }
-      );
-    }
-
-    // Validate invite code
-    const invite = await prisma.invite.findUnique({
-      where: { code: inviteCode.toUpperCase() },
+    const { email, password, name, organization, inviteCode } = parsed.data;
+    const emailLimit = checkRateLimit(`auth-register:email:${email}`, {
+      max: 8,
+      windowMs: 15 * 60 * 1000,
     });
-
-    if (!invite) {
+    if (!emailLimit.allowed) {
       return NextResponse.json(
-        { error: 'Invalid invite code' },
-        { status: 400 }
+        { error: 'Too many registration attempts. Please try again later.' },
+        { status: 429 }
       );
     }
 
-    if (invite.expiresAt && invite.expiresAt < new Date()) {
-      return NextResponse.json(
-        { error: 'Invite code has expired' },
-        { status: 400 }
-      );
-    }
+    const advisor = await prisma.$transaction(async (tx) => {
+      const invite = await tx.invite.findUnique({
+        where: { code: inviteCode },
+      });
 
-    if (invite.useCount >= invite.maxUses) {
-      return NextResponse.json(
-        { error: 'Invite code has already been used' },
-        { status: 400 }
-      );
-    }
+      if (!invite) {
+        throw new RegistrationError(INVITE_ERROR);
+      }
 
-    if (invite.email && invite.email.toLowerCase() !== email.toLowerCase()) {
-      return NextResponse.json(
-        { error: 'This invite code is for a different email address' },
-        { status: 400 }
-      );
-    }
+      const now = new Date();
 
-    // Check if email already exists
-    const existing = await prisma.advisor.findUnique({
-      where: { email: email.toLowerCase() },
-    });
+      if (invite.expiresAt && invite.expiresAt < now) {
+        throw new RegistrationError(INVITE_ERROR);
+      }
 
-    if (existing) {
-      return NextResponse.json(
-        { error: 'An account with this email already exists' },
-        { status: 400 }
-      );
-    }
+      if (invite.useCount >= invite.maxUses) {
+        throw new RegistrationError(INVITE_ERROR);
+      }
 
-    // Create advisor
-    const passwordHash = await hashPassword(password);
-    const advisor = await prisma.advisor.create({
-      data: {
-        email: email.toLowerCase(),
-        name,
-        organization: organization || null,
-        passwordHash,
-      },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        organization: true,
-      },
-    });
+      if (invite.email && invite.email.toLowerCase() !== email) {
+        throw new RegistrationError(INVITE_ERROR);
+      }
 
-    // Mark invite as used
-    await prisma.invite.update({
-      where: { id: invite.id },
-      data: {
-        useCount: { increment: 1 },
-        usedAt: invite.useCount === 0 ? new Date() : undefined,
-        usedBy: invite.useCount === 0 ? advisor.id : undefined,
-      },
+      const existing = await tx.advisor.findUnique({
+        where: { email },
+      });
+
+      if (existing) {
+        throw new RegistrationError('An account with this email already exists');
+      }
+
+      const passwordHash = await hashPassword(password);
+      const createdAdvisor = await tx.advisor.create({
+        data: {
+          email,
+          name,
+          organization: organization || null,
+          passwordHash,
+        },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+          organization: true,
+        },
+      });
+
+      const consumed = await tx.invite.updateMany({
+        where: {
+          id: invite.id,
+          useCount: invite.useCount,
+        },
+        data: {
+          useCount: { increment: 1 },
+          usedAt: invite.useCount === 0 ? now : undefined,
+          usedBy: invite.useCount === 0 ? createdAdvisor.id : undefined,
+        },
+      });
+
+      if (consumed.count !== 1) {
+        throw new RegistrationError(INVITE_ERROR);
+      }
+
+      return createdAdvisor;
     });
 
     // Create token and set cookie
@@ -121,6 +155,21 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
+    if (error instanceof RegistrationError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status }
+      );
+    }
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2002'
+    ) {
+      return NextResponse.json(
+        { error: 'An account with this email already exists' },
+        { status: 400 }
+      );
+    }
     console.error('Registration error:', error);
     return NextResponse.json(
       { error: 'Failed to create account' },

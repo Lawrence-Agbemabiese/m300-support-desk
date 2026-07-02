@@ -1,5 +1,48 @@
 import type { ProjectIntake, PolicyInterpretation, GrantMatch, ProposalCoach, ChecklistItem } from '@/lib/schemas';
 
+export function normalizeProblemLocation(
+  rawLocation: string | undefined,
+  country = ''
+): string {
+  const normalized = (rawLocation || '').trim().replace(/\s+/g, ' ');
+  const withoutLeadIn = normalized
+    .replace(/^the\s+project\s+(site\s+)?is\s+(located|situated|based)\s+(in|within|at)\s+/i, '')
+    .replace(/^project\s+(site\s+)?is\s+(located|situated|based)\s+(in|within|at)\s+/i, '')
+    .replace(/^(located|situated|based)\s+(in|within|at)\s+/i, '')
+    .replace(/^(in|within|at)\s+/i, '');
+
+  if (!withoutLeadIn) return country || 'the project area';
+
+  const firstSentence = withoutLeadIn.match(/^[\s\S]*?[.!?](?=\s+[A-Z])/);
+  const concise = firstSentence ? firstSentence[0] : withoutLeadIn;
+
+  return concise.replace(/[.!?]\s*$/, '');
+}
+
+export function normalizeLegacyProblemStatement(
+  problemStatement: string,
+  rawLocation: string | undefined,
+  country = ''
+): string {
+  const legacyPrefix =
+    /^Approximately \[X\] people in[\s\S]*?lack access to reliable electricity\.\s*/;
+  const leadSentence =
+    `The project site is in ${normalizeProblemLocation(rawLocation, country)}, ` +
+    'where approximately [X] people lack access to reliable electricity. ';
+
+  if (legacyPrefix.test(problemStatement)) {
+    return problemStatement.replace(legacyPrefix, leadSentence);
+  }
+
+  const malformedCurrentPrefix =
+    /^The project site is in[\s\S]*?where approximately \[X\] people lack access to reliable electricity\.\s*/;
+  if (malformedCurrentPrefix.test(problemStatement)) {
+    return problemStatement.replace(malformedCurrentPrefix, leadSentence);
+  }
+
+  return problemStatement;
+}
+
 export function coachProposal(
   project: ProjectIntake,
   interpretation: PolicyInterpretation,
@@ -12,6 +55,7 @@ export function coachProposal(
   const techType = project.technology_type.replace(/_/g, ' ');
   const country = project.country || '';
   const location = project.location_description || country;
+  const cleanLocation = normalizeProblemLocation(location, country);
   const beneficiaries = project.target_beneficiaries || 'target beneficiaries';
   const productiveUses = project.productive_uses || [];
   const capacity = project.capacity_kw;
@@ -42,7 +86,7 @@ export function coachProposal(
   // Generate proposal outline
   const proposalOutline = {
     problem_statement:
-      `Approximately [X] people in ${location} lack access to reliable electricity. ` +
+      `The project site is in ${cleanLocation}, where approximately [X] people lack access to reliable electricity. ` +
       (techType.toLowerCase().includes('health')
         ? 'Health facilities operate without reliable power, affecting service delivery. '
         : 'This energy poverty constrains economic development and quality of life. ') +

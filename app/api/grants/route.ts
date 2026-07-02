@@ -2,11 +2,33 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ProjectIntakeSchema } from '@/lib/schemas';
 import { matchGrants } from '@/lib/agents/grant-matcher';
 import { requireAuth } from '@/lib/access-control';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import { rejectIfCrossOrigin } from '@/lib/request-security';
 
 export async function POST(request: NextRequest) {
   try {
+    const originError = rejectIfCrossOrigin(request);
+    if (originError) return originError;
+
     const auth = await requireAuth();
     if (!auth.ok) return auth.response;
+    const { session } = auth;
+
+    const ip = getClientIp(request);
+    const ipLimit = checkRateLimit(`grants:ip:${ip}`, {
+      max: 80,
+      windowMs: 10 * 60 * 1000,
+    });
+    const userLimit = checkRateLimit(`grants:user:${session.id}`, {
+      max: 40,
+      windowMs: 10 * 60 * 1000,
+    });
+    if (!ipLimit.allowed || !userLimit.allowed) {
+      return NextResponse.json(
+        { error: 'Too many grant-matching requests. Please try again later.' },
+        { status: 429 }
+      );
+    }
 
     const body = await request.json();
 

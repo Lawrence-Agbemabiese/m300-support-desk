@@ -1,21 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { isAdmin, requireAuth } from '@/lib/access-control';
+import { z } from 'zod';
+
+const statusValues = ['submitted', 'in_review', 'approved', 'needs_info', 'archived'] as const;
+const ProjectsQuerySchema = z.object({
+  status: z.enum(statusValues).optional(),
+  country: z.string().trim().min(2).max(120).optional(),
+  myProjects: z.boolean().optional(),
+  limit: z.preprocess(
+    (value) => (value === undefined ? 50 : Number(value)),
+    z.number().int().min(1).max(100)
+  ),
+  offset: z.preprocess(
+    (value) => (value === undefined ? 0 : Number(value)),
+    z.number().int().min(0)
+  ),
+});
 
 // GET /api/projects - List all projects
 export async function GET(request: NextRequest) {
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const status = searchParams.get('status');
-    const country = searchParams.get('country');
-    const myProjects = searchParams.get('my_projects') === 'true';
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
-
     const auth = await requireAuth();
     if (!auth.ok) return auth.response;
     const { session } = auth;
     const sessionIsAdmin = isAdmin(session);
+
+    const searchParams = request.nextUrl.searchParams;
+    const parsed = ProjectsQuerySchema.safeParse({
+      status: searchParams.get('status') || undefined,
+      country: searchParams.get('country') || undefined,
+      myProjects: searchParams.get('my_projects') === 'true',
+      limit: searchParams.get('limit') ?? undefined,
+      offset: searchParams.get('offset') ?? undefined,
+    });
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid query parameters' },
+        { status: 400 }
+      );
+    }
+    const { status, country, myProjects, limit, offset } = parsed.data;
 
     const where: Record<string, unknown> = {};
     if (status) where.status = status;

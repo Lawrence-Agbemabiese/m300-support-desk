@@ -1,45 +1,79 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { z } from 'zod';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+
+const ValidateInviteSchema = z.object({
+  code: z
+    .string()
+    .trim()
+    .min(6)
+    .max(32)
+    .regex(/^[A-Z0-9]+$/i)
+    .transform((value) => value.toUpperCase()),
+  email: z.string().email().optional().transform((value) => value?.trim().toLowerCase()),
+});
+
+const GENERIC_INVITE_ERROR = 'Invalid or unavailable invite code';
 
 // POST - Validate an invite code
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { code, email } = body;
-
-    if (!code) {
+    const ip = getClientIp(request);
+    const ipLimit = checkRateLimit(`invite-validate:ip:${ip}`, {
+      max: 50,
+      windowMs: 10 * 60 * 1000,
+    });
+    if (!ipLimit.allowed) {
       return NextResponse.json(
-        { valid: false, error: 'Invite code required' },
+        { valid: false, error: 'Too many validation attempts. Please try again later.' },
+        { status: 429 }
+      );
+    }
+
+    const body = await request.json();
+    const parsed = ValidateInviteSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { valid: false, error: GENERIC_INVITE_ERROR },
         { status: 400 }
+      );
+    }
+    const { code, email } = parsed.data;
+
+    const codeLimit = checkRateLimit(`invite-validate:code:${code}:${ip}`, {
+      max: 20,
+      windowMs: 10 * 60 * 1000,
+    });
+    if (!codeLimit.allowed) {
+      return NextResponse.json(
+        { valid: false, error: 'Too many validation attempts. Please try again later.' },
+        { status: 429 }
       );
     }
 
     const invite = await prisma.invite.findUnique({
-      where: { code: code.toUpperCase() },
+      where: { code },
     });
 
     if (!invite) {
-      return NextResponse.json({ valid: false, error: 'Invalid invite code' });
+      return NextResponse.json({ valid: false, error: GENERIC_INVITE_ERROR });
     }
 
-    // Check if expired
     if (invite.expiresAt && invite.expiresAt < new Date()) {
-      return NextResponse.json({ valid: false, error: 'Invite code has expired' });
+      return NextResponse.json({ valid: false, error: GENERIC_INVITE_ERROR });
     }
 
-    // Check if used up
     if (invite.useCount >= invite.maxUses) {
-      return NextResponse.json({ valid: false, error: 'Invite code has already been used' });
+      return NextResponse.json({ valid: false, error: GENERIC_INVITE_ERROR });
     }
 
-    // Check email restriction
     if (invite.email && email && invite.email.toLowerCase() !== email.toLowerCase()) {
-      return NextResponse.json({ valid: false, error: 'This invite code is for a different email address' });
+      return NextResponse.json({ valid: false, error: GENERIC_INVITE_ERROR });
     }
 
     return NextResponse.json({
       valid: true,
-      email: invite.email, // Return restricted email if any
     });
   } catch (error) {
     console.error('Error validating invite:', error);

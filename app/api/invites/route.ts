@@ -1,25 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { getServerSession } from '@/lib/auth';
+import { requireAdmin } from '@/lib/access-control';
 import { randomBytes } from 'crypto';
+import { Prisma } from '@prisma/client';
+import { z } from 'zod';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import { rejectIfCrossOrigin } from '@/lib/request-security';
 
 // Generate a readable invite code
 function generateInviteCode(): string {
-  const bytes = randomBytes(4);
+  const bytes = randomBytes(6);
   return bytes.toString('hex').toUpperCase();
 }
+
+const CreateInviteSchema = z.object({
+  email: z
+    .union([z.string().email(), z.literal('')])
+    .optional()
+    .transform((value) => {
+      if (!value) return undefined;
+      return value.trim().toLowerCase();
+    }),
+  expiresInDays: z.preprocess(
+    (value) => (value === '' || value === undefined || value === null ? 7 : Number(value)),
+    z.number().int().min(1).max(365)
+  ),
+  maxUses: z.preprocess(
+    (value) => (value === '' || value === undefined || value === null ? 1 : Number(value)),
+    z.number().int().min(1).max(20)
+  ),
+});
+
+const DeleteInviteQuerySchema = z.object({
+  id: z.string().cuid(),
+});
 
 // GET - List all invites (admin only)
 export async function GET() {
   try {
-    const session = await getServerSession();
-
-    if (!session || session.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Admin access required' },
-        { status: 403 }
-      );
-    }
+    const admin = await requireAdmin();
+    if (!admin.ok) return admin.response;
 
     const invites = await prisma.invite.findMany({
       orderBy: { createdAt: 'desc' },
@@ -38,32 +58,70 @@ export async function GET() {
 // POST - Create new invite (admin only)
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession();
+    const originError = rejectIfCrossOrigin(request);
+    if (originError) return originError;
 
-    if (!session || session.role !== 'admin') {
+    const admin = await requireAdmin();
+    if (!admin.ok) return admin.response;
+    const { session } = admin;
+
+    const ip = getClientIp(request);
+    const limit = checkRateLimit(`admin-invites:create:${session.id}:${ip}`, {
+      max: 50,
+      windowMs: 10 * 60 * 1000,
+    });
+    if (!limit.allowed) {
       return NextResponse.json(
-        { error: 'Admin access required' },
-        { status: 403 }
+        { error: 'Too many invite creation requests. Please try again later.' },
+        { status: 429 }
       );
     }
 
     const body = await request.json();
-    const { email, expiresInDays, maxUses } = body;
+    const parsed = CreateInviteSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid invite configuration' },
+        { status: 400 }
+      );
+    }
+    const { email, expiresInDays, maxUses } = parsed.data;
 
-    const code = generateInviteCode();
     const expiresAt = expiresInDays
       ? new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000)
       : null;
 
-    const invite = await prisma.invite.create({
-      data: {
-        code,
-        email: email || null,
-        createdBy: session.id,
-        expiresAt,
-        maxUses: maxUses || 1,
-      },
-    });
+    let invite = null;
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      const code = generateInviteCode();
+      try {
+        invite = await prisma.invite.create({
+          data: {
+            code,
+            email: email || null,
+            createdBy: session.id,
+            expiresAt,
+            maxUses: maxUses || 1,
+          },
+        });
+        break;
+      } catch (error) {
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === 'P2002'
+        ) {
+          continue;
+        }
+        throw error;
+      }
+    }
+
+    if (!invite) {
+      return NextResponse.json(
+        { error: 'Failed to generate a unique invite code. Please try again.' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({ invite });
   } catch (error) {
@@ -78,24 +136,23 @@ export async function POST(request: NextRequest) {
 // DELETE - Revoke an invite (admin only)
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession();
+    const originError = rejectIfCrossOrigin(request);
+    if (originError) return originError;
 
-    if (!session || session.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Admin access required' },
-        { status: 403 }
-      );
-    }
+    const admin = await requireAdmin();
+    if (!admin.ok) return admin.response;
 
     const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
-
-    if (!id) {
+    const parsed = DeleteInviteQuerySchema.safeParse({
+      id: searchParams.get('id'),
+    });
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Invite ID required' },
+        { error: 'Valid invite ID required' },
         { status: 400 }
       );
     }
+    const { id } = parsed.data;
 
     await prisma.invite.delete({
       where: { id },

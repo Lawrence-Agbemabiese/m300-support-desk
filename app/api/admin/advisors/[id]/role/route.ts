@@ -2,8 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireAdmin } from '@/lib/access-control';
 import { getEffectiveRole, isProtectedDeveloper } from '@/lib/auth';
+import { z } from 'zod';
+import { rejectIfCrossOrigin } from '@/lib/request-security';
 
 const ALLOWED_ROLES = new Set(['advisor', 'admin']);
+const RoleUpdateSchema = z.object({
+  role: z.enum(['advisor', 'admin']),
+});
 
 // PATCH - Update advisor role (admin only)
 export async function PATCH(
@@ -11,20 +16,26 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const originError = rejectIfCrossOrigin(request);
+    if (originError) return originError;
+
     const admin = await requireAdmin();
     if (!admin.ok) return admin.response;
     const { session } = admin;
 
     const { id } = await params;
     const body = await request.json();
-    const role = typeof body?.role === 'string' ? body.role.trim().toLowerCase() : '';
+    const parsed = RoleUpdateSchema.safeParse({
+      role: typeof body?.role === 'string' ? body.role.trim().toLowerCase() : body?.role,
+    });
 
-    if (!ALLOWED_ROLES.has(role)) {
+    if (!parsed.success || !ALLOWED_ROLES.has(parsed.data.role)) {
       return NextResponse.json(
         { error: 'Invalid role. Allowed roles: advisor, admin' },
         { status: 400 }
       );
     }
+    const { role } = parsed.data;
 
     if (session.id === id && role !== 'admin') {
       return NextResponse.json(

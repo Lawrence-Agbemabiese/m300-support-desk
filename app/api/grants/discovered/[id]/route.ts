@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireAdmin } from '@/lib/access-control';
+import { z } from 'zod';
+import { rejectIfCrossOrigin } from '@/lib/request-security';
+
+const PatchSchema = z.object({
+  status: z.enum(['approved', 'rejected', 'duplicate', 'pending']),
+  reviewNotes: z.string().max(2000).optional(),
+});
 
 // GET - Get single discovered grant
 export async function GET(
@@ -40,20 +47,23 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const originError = rejectIfCrossOrigin(request);
+    if (originError) return originError;
+
     const admin = await requireAdmin();
     if (!admin.ok) return admin.response;
     const { session } = admin;
 
     const { id } = await params;
     const body = await request.json();
-    const { status, reviewNotes } = body;
-
-    if (!['approved', 'rejected', 'duplicate', 'pending'].includes(status)) {
+    const parsed = PatchSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Invalid status' },
+        { error: 'Invalid status update payload' },
         { status: 400 }
       );
     }
+    const { status, reviewNotes } = parsed.data;
 
     const grant = await prisma.discoveredGrant.update({
       where: { id },
@@ -77,10 +87,13 @@ export async function PATCH(
 
 // DELETE - Delete discovered grant
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const originError = rejectIfCrossOrigin(request);
+    if (originError) return originError;
+
     const admin = await requireAdmin();
     if (!admin.ok) return admin.response;
 

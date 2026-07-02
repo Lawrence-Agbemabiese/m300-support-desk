@@ -1,11 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { isAdmin, requireAdmin, requireAuth } from '@/lib/access-control';
+import { normalizeLegacyProblemStatement } from '@/lib/agents/proposal-coach';
 import type { AnalysisResult, ProjectIntake, PolicyInterpretation, GrantMatchResult, ProposalCoach, TradeOffExplorerResult } from '@/lib/schemas';
+import { z } from 'zod';
+import { rejectIfCrossOrigin } from '@/lib/request-security';
+
+const ProjectUpdateSchema = z.object({
+  status: z.enum(['submitted', 'in_review', 'approved', 'needs_info', 'archived']).optional(),
+  advisorNotes: z.string().max(5000).optional(),
+});
 
 // GET /api/projects/[id] - Get single project with full details
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -39,8 +47,24 @@ export async function GET(
 
     // Reconstruct the full analysis result
     const tradeoffsRaw = (project as any).tradeoffsResult as string | null | undefined;
+    const parsedCoach = project.coachResult
+      ? (JSON.parse(project.coachResult) as ProposalCoach)
+      : null;
+    const normalizedCoach = parsedCoach
+      ? {
+          ...parsedCoach,
+          proposal_outline: {
+            ...parsedCoach.proposal_outline,
+            problem_statement: normalizeLegacyProblemStatement(
+              parsedCoach.proposal_outline.problem_statement,
+              project.locationDescription,
+              project.country
+            ),
+          },
+        }
+      : null;
 
-    const analysisResult: AnalysisResult | null = project.policyResult ? {
+    const analysisResult: AnalysisResult | null = project.policyResult && normalizedCoach ? {
       project: {
         project_name: project.projectName,
         country: project.country,
@@ -59,7 +83,7 @@ export async function GET(
       },
       policy: JSON.parse(project.policyResult) as PolicyInterpretation,
       grants: JSON.parse(project.grantsResult!) as GrantMatchResult,
-      coach: JSON.parse(project.coachResult!) as ProposalCoach,
+      coach: normalizedCoach,
       tradeoffs: tradeoffsRaw ? (JSON.parse(tradeoffsRaw) as TradeOffExplorerResult) : undefined,
       metadata: {
         enhanced: project.enhanced,
@@ -101,6 +125,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const originError = rejectIfCrossOrigin(request);
+    if (originError) return originError;
+
     const auth = await requireAuth();
     if (!auth.ok) return auth.response;
     const { session } = auth;
@@ -108,20 +135,30 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await request.json();
+    const parsed = ProjectUpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid project update payload' },
+        { status: 400 }
+      );
+    }
+    const parsedBody = parsed.data;
 
-    if (body.status !== undefined && !sessionIsAdmin) {
+    if (parsedBody.status !== undefined && !sessionIsAdmin) {
       return NextResponse.json(
         { error: 'Only admins can update project status' },
         { status: 403 }
       );
     }
 
-    const allowedFields = sessionIsAdmin ? ['status', 'advisorNotes'] : ['advisorNotes'];
+    const allowedFields: Array<keyof typeof parsedBody> = sessionIsAdmin
+      ? ['status', 'advisorNotes']
+      : ['advisorNotes'];
     const updateData: Record<string, string> = {};
 
     for (const field of allowedFields) {
-      if (body[field] !== undefined) {
-        updateData[field] = body[field];
+      if (parsedBody[field] !== undefined) {
+        updateData[field] = parsedBody[field];
       }
     }
 
@@ -167,10 +204,13 @@ export async function PATCH(
 
 // DELETE /api/projects/[id] - Delete a project
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const originError = rejectIfCrossOrigin(request);
+    if (originError) return originError;
+
     const admin = await requireAdmin();
     if (!admin.ok) return admin.response;
 

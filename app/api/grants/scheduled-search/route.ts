@@ -60,6 +60,13 @@ export async function POST(request: NextRequest) {
 
     // Allow Vercel Cron (automatically authenticated by Vercel)
     const isVercelCron = vercelCronHeader === '1';
+    if (!isVercelCron && (!cronSecret || cronSecret.trim().length < 20)) {
+      return NextResponse.json(
+        { error: 'CRON_SECRET is not configured securely' },
+        { status: 500 }
+      );
+    }
+
     const isValidBearerToken = authHeader === `Bearer ${cronSecret}`;
 
     if (!isVercelCron && !isValidBearerToken) {
@@ -189,10 +196,8 @@ export async function POST(request: NextRequest) {
 
 // GET - Info about scheduled search configuration
 export async function GET() {
-  return NextResponse.json({
-    message: 'Scheduled Grant Search Endpoint',
-    description: 'POST to this endpoint with Bearer token to trigger a scheduled search',
-    searches: SCHEDULED_SEARCHES.length,
-    regions: [...new Set(SCHEDULED_SEARCHES.map(s => s.region))],
-  });
+  return NextResponse.json(
+    { error: 'Method not allowed' },
+    { status: 405 }
+  );
 }
