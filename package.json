@@ -8,7 +8,7 @@
     "build:vercel": "npm run prisma:generate && next build",
     "prisma:generate": "prisma generate",
     "prisma:migrate:deploy": "prisma migrate deploy",
-    "start": "HOSTNAME=0.0.0.0 node .next/standalone/server.js",
+    "start": "sh -c 'next start -H 0.0.0.0 -p ${PORT:-3000}'",
     "lint": "next lint"
   },
   "dependencies": {
