@@ -12,20 +12,23 @@ This Support Desk takes a different approach: **prioritizing grant alignment and
 
 ## Core Principles (from M300 Analysis)
 
-1. **Grants over loans**: Prioritize grant-based and highly concessional finance
-2. **Debt sensitivity**: Flag any financing that adds to sovereign or municipal debt burden
+1. **Grants over loans**: Prioritize grant-based finance while allowing documented comparison of other instruments
+2. **Debt sensitivity**: Weight repayment, currency, guarantee, and contingent-liability exposure; do not treat debt as an automatic exclusion
 3. **Public/community ownership**: Keep infrastructure locally owned to prevent capital flight
 4. **Fiscal capacity protection**: Avoid arrangements that reduce fiscal space for health, education, other priorities
 
 ## Multi-Agent Architecture
 
-The system uses three specialized agents:
+The web application combines four specialized analysis stages:
 
 | Agent | Role | Input | Output |
 |-------|------|-------|--------|
 | **Policy Interpreter** | Translates project concepts into M300-aligned language | `project_intake` | `policy_interpretation` |
 | **Grant Matcher** | Scores and ranks grant sources from local database | `project_intake` + `policy_interpretation` | `grant_match` |
 | **Proposal Coach** | Generates grant-ready outline and readiness checklist | All previous outputs | `proposal_coach` |
+| **Trade-Off Explorer** | Separates ownership, delivery, scope, and finance choices | `project_intake` + `policy_interpretation` | `tradeoffs` |
+
+Projects are searchable and vertically listed. An owner or admin can reopen a saved intake, edit it, and submit it for reanalysis. Each submission creates an immutable numbered revision; current project fields and the revision record are committed atomically with optimistic concurrency protection.
 
 ## Repository Structure
 
@@ -97,7 +100,7 @@ python run_demo.py --intake path/to/intake.json
 2. **Policy Interpreter** returns:
    - M300 alignment narrative
    - Grant-suitable elements (community ownership, productive use, last-mile)
-   - Debt exposure risks (none if grant-only)
+   - Debt exposure risks and verification points, even when grant-only is preferred
    - Assumptions list
 
 3. **Grant Matcher** returns:

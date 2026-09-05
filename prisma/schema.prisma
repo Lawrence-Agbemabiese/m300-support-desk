@@ -46,6 +46,7 @@ model DiscoveredGrant {
   discoveredBy      String   // "auto_search" or advisor ID
   searchQuery       String?  // What search found this
   confidence        Float?   // AI confidence score
+  verificationStatus String  @default("unverified") // unverified, verified, rejected
 
   // Review status
   status            String   @default("pending") // pending, approved, rejected, duplicate
@@ -80,6 +81,7 @@ model Advisor {
   passwordHash String
   role         String    @default("advisor") // advisor, admin
   projects     Project[]
+  projectRevisions ProjectRevision[] @relation("ProjectRevisionCreatedBy")
 }
 
 // Project submission tracking
@@ -93,16 +95,20 @@ model Project {
   country             String
   locationDescription String
   technologyType      String
+  technologyOther     String?
   capacityKw          Float?
   targetBeneficiaries String
   ownershipModel      String
+  ownershipOther      String?
   productiveUses      String   // JSON array stored as string
   estimatedCostUsd    Float
   existingFunding     String?
   projectStage        String
   communityEngagement String?
   additionalContext   String?
+  contactInfo         String?  // JSON object stored as string
   debtPreference      String
+  readinessEvidence   String?  // JSON object stored as string
 
   // Analysis results (stored as JSON strings)
   policyResult        String?  // PolicyInterpretation JSON
@@ -121,8 +127,38 @@ model Project {
   // Tracking
   status              String   @default("submitted") // submitted, in_review, approved, needs_info, archived
   advisorNotes        String?
+  currentRevision     Int      @default(1)
 
   // Advisor relationship
   advisorId           String?
   advisor             Advisor? @relation(fields: [advisorId], references: [id])
+  revisions           ProjectRevision[]
+
+  @@index([advisorId, createdAt])
+  @@index([status, createdAt])
+}
+
+// Immutable audit history for every initial analysis and reanalysis.
+model ProjectRevision {
+  id                 String   @id @default(cuid())
+  createdAt          DateTime @default(now())
+  revisionNumber     Int
+  source             String   @default("reanalysis") // initial, reanalysis, legacy_backfill
+  intakeSnapshot     String   // ProjectIntake JSON
+  policyResult       String?
+  grantsResult       String?
+  coachResult        String?
+  tradeoffsResult    String?
+  enhanced           Boolean  @default(false)
+  model              String?
+  processingTimeMs   Int?
+
+  projectId          String
+  project            Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdByAdvisorId String?
+  createdByAdvisor   Advisor? @relation("ProjectRevisionCreatedBy", fields: [createdByAdvisorId], references: [id], onDelete: SetNull)
+
+  @@unique([projectId, revisionNumber])
+  @@index([projectId, createdAt])
+  @@index([createdByAdvisorId])
 }

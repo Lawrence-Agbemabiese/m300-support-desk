@@ -19,12 +19,12 @@ export interface TradeOffExplorerResult {
 export function exploreTradeOffs(project: ProjectIntake, policy: PolicyInterpretation): TradeOffExplorerResult {
   const ownership = project.ownership_model;
   const tier = policy.debt_sensitivity_tier || 'tier_2';
-  const tech = project.technology_type.replace(/_/g, ' ');
+  const tech = project.technology_type === 'other' && project.technology_other ? project.technology_other : project.technology_type.replace(/_/g, ' ');
   const country = project.country;
 
   const sensitivity_drivers = [
-    `Ownership model (${ownership.replace(/_/g, ' ')}) drives debt tier ${tier.toUpperCase()}`,
-    `Debt preference: ${project.debt_preference.replace(/_/g, ' ')}`,
+    `Funding preference (${project.debt_preference.replace(/_/g, ' ')}) determines ${tier === 'tier_1' ? 'Tier 1 — low/no debt preferred' : 'Tier 2 — some debt accepted'}`,
+    `Ownership model (${ownership === 'other' && project.ownership_other ? project.ownership_other : ownership.replace(/_/g, ' ')}) is assessed separately for governance and benefit sharing`,
     `Capital need: $${project.estimated_cost_usd.toLocaleString()} for ${tech}`,
     project.productive_uses?.length ? `Productive uses: ${project.productive_uses.slice(0, 3).join(', ')}` : 'Productive uses: not specified',
   ];
@@ -34,7 +34,7 @@ export function exploreTradeOffs(project: ProjectIntake, policy: PolicyInterpret
   // Community/public vs speed of execution
   tradeOffs.push({
     title: 'Community/Public Ownership vs Execution Speed',
-    description: 'Deep community/public ownership strengthens debt-sensitivity but can lengthen approvals.',
+    description: 'Deep community/public ownership can strengthen governance and local-benefit alignment but may lengthen approvals.',
     upsides: ['Stronger grant eligibility', 'Lower debt exposure', 'Political goodwill in ' + country],
     risks: ['Longer decision cycles', 'Complex governance setup', 'Potential scope creep from stakeholders'],
     signals_to_monitor: [
@@ -86,8 +86,8 @@ export function exploreTradeOffs(project: ProjectIntake, policy: PolicyInterpret
   });
 
   const bottom_line = tier === 'tier_1'
-    ? 'Stay grant-led; protect community/public ownership narrative while speeding approvals.'
-    : 'Move toward community/public ownership and grant-first framing to reduce debt exposure before engaging blended offers.';
+    ? 'Stay grant-led and verify that final terms preserve the intended low/no-debt position.'
+    : 'Compare repayment, currency, guarantee, and contingent-liability terms while keeping grant options prominent.';
 
   return {
     sensitivity_drivers,

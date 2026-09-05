@@ -160,7 +160,7 @@ export function coachProposal(
       'Governance: Capacity gaps - mitigated by training, oversight, term limits\n' +
       'External: Policy changes - mitigated by community ownership resilience\n\n' +
       `DEBT SENSITIVITY: ${interpretation.debt_exposure_risks.join('; ')}. ` +
-      `This project ${interpretation.debt_sensitivity_tier === 'tier_1' ? 'creates no debt obligations' : 'has debt implications requiring management'}.`,
+      `This project ${interpretation.debt_sensitivity_tier === 'tier_1' ? 'prefers low/no-debt finance; final terms still require verification' : 'accepts some debt subject to repayment, currency, and guarantee review'}.`,
   };
 
   const mapEvidenceStatus = (
@@ -386,7 +386,7 @@ export function coachProposal(
       estimated_preparation_effort: ready >= 5 ? 'weeks' : 'months',
     },
     funder_specific_guidance: funderGuidance,
-    debt_sensitivity_statement: `This project is classified as ${interpretation.debt_sensitivity_tier?.replace('_', ' ').toUpperCase() || 'TIER 2'} for debt sensitivity. ${interpretation.debt_exposure_risks[0]}`,
+    debt_sensitivity_statement: `This project is classified as ${interpretation.debt_sensitivity_tier === 'tier_1' ? 'Tier 1 — low/no debt preferred' : 'Tier 2 — some debt accepted'}. ${interpretation.debt_exposure_risks[0]}`,
     m300_alignment_statement: `With an M300 alignment score of ${interpretation.m300_alignment_score}/100, this project demonstrates ${interpretation.m300_alignment_score >= 70 ? 'strong' : 'moderate'} alignment with Mission 300's debt-sensitive principles, prioritizing grant funding and ${ownership.includes('community') ? 'community' : 'local'} ownership.`,
   };
 }

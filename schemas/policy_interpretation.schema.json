@@ -110,8 +110,8 @@
     },
     "debt_sensitivity_tier": {
       "type": "string",
-      "description": "Assessed debt sensitivity tier based on project structure",
-      "enum": ["tier_1", "tier_2", "tier_3", "tier_4"]
+      "description": "Funding tier derived from financing preference, independent of ownership",
+      "enum": ["tier_1", "tier_2"]
     },
     "m300_specific_tags": {
       "type": "object",

@@ -106,8 +106,8 @@
           },
           "debt_sensitivity_tier": {
             "type": "string",
-            "description": "Debt sensitivity classification for this funder",
-            "enum": ["tier_1", "tier_2", "tier_3", "tier_4"]
+            "description": "Two-tier funding classification for this funder",
+            "enum": ["tier_1", "tier_2"]
           }
         },
         "additionalProperties": false
@@ -149,19 +149,11 @@
       "properties": {
         "tier_1_count": {
           "type": "integer",
-          "description": "Number of debt-free (grant) options"
+          "description": "Number of low/no-debt options"
         },
         "tier_2_count": {
           "type": "integer",
-          "description": "Number of minimal-debt options"
-        },
-        "tier_3_count": {
-          "type": "integer",
-          "description": "Number of moderate-debt options"
-        },
-        "tier_4_count": {
-          "type": "integer",
-          "description": "Number of high-debt options (should be 0 or excluded)"
+          "description": "Number of options accepting some debt"
         },
         "recommendation": {
           "type": "string",

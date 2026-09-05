@@ -8,6 +8,7 @@ import {
   StyleSheet,
 } from '@react-pdf/renderer';
 import type { AnalysisResult } from '@/lib/schemas';
+import { fundingTierLabel, normalizeFundingTier } from '@/lib/funding-tiers';
 
 const styles = StyleSheet.create({
   page: {
@@ -299,16 +300,7 @@ export function AnalysisPDF({ result }: AnalysisPDFProps) {
   });
 
   const getTierStyle = (tier: string | undefined) => {
-    switch (tier) {
-      case 'tier_2':
-        return styles.tierBadgeYellow;
-      case 'tier_3':
-        return styles.tierBadgeOrange;
-      case 'tier_4':
-        return styles.tierBadgeRed;
-      default:
-        return {};
-    }
+    return normalizeFundingTier(tier) === 'tier_2' ? styles.tierBadgeYellow : {};
   };
 
   const Footer = () => (
@@ -328,7 +320,7 @@ export function AnalysisPDF({ result }: AnalysisPDFProps) {
           <Text style={styles.subtitle}>Debt-Sensitive Grant Matching for African Energy Projects</Text>
           <Text style={styles.title}>{project.project_name}</Text>
           <Text style={styles.projectMeta}>
-            {project.country} | {project.technology_type.replace(/_/g, ' ')} | ${project.estimated_cost_usd.toLocaleString()}
+            {project.country} | {project.technology_type === 'other' && project.technology_other ? project.technology_other : project.technology_type.replace(/_/g, ' ')} | ${project.estimated_cost_usd.toLocaleString()}
           </Text>
         </View>
 
@@ -340,7 +332,7 @@ export function AnalysisPDF({ result }: AnalysisPDFProps) {
             <View style={styles.scoreDetails}>
               <Text style={styles.scoreLabel}>M300 Alignment Score (out of 100)</Text>
               <Text style={[styles.tierBadge, getTierStyle(policy.debt_sensitivity_tier)]}>
-                {policy.debt_sensitivity_tier?.replace('_', ' ').toUpperCase()}
+                {fundingTierLabel(policy.debt_sensitivity_tier)}
               </Text>
             </View>
           </View>
@@ -393,7 +385,7 @@ export function AnalysisPDF({ result }: AnalysisPDFProps) {
                 <Text style={styles.grantScore}>{match.fit_score}/100</Text>
               </View>
               <Text style={styles.grantMeta}>
-                Instrument: {match.instrument_type.replace(/_/g, ' ')} | Debt Tier: {match.debt_sensitivity_tier?.replace('_', ' ').toUpperCase()}
+                Instrument: {match.instrument_type.replace(/_/g, ' ')} | Funding: {fundingTierLabel(match.debt_sensitivity_tier)}
               </Text>
               <Text style={styles.subsectionTitle}>Why This Funder</Text>
               {match.fit_rationale.slice(0, 3).map((rationale, i) => (
@@ -443,7 +435,7 @@ export function AnalysisPDF({ result }: AnalysisPDFProps) {
                 <Text style={styles.grantScore}>{match.fit_score}/100</Text>
               </View>
               <Text style={styles.grantMeta}>
-                Instrument: {match.instrument_type.replace(/_/g, ' ')} | Debt Tier: {match.debt_sensitivity_tier?.replace('_', ' ').toUpperCase()}
+                Instrument: {match.instrument_type.replace(/_/g, ' ')} | Funding: {fundingTierLabel(match.debt_sensitivity_tier)}
               </Text>
               <Text style={styles.subsectionTitle}>Why This Funder</Text>
               {match.fit_rationale.slice(0, 3).map((rationale, i) => (

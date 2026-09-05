@@ -49,6 +49,7 @@
         "other"
       ]
     },
+    "technology_other": { "type": "string", "description": "Required free-text technology description when technology_type is other", "minLength": 1, "maxLength": 200 },
     "capacity_kw": {
       "type": "number",
       "description": "Installed capacity in kilowatts (for generation projects)",
@@ -70,9 +71,11 @@
         "public_community_hybrid",
         "private_with_benefit_sharing",
         "private_ipp",
-        "undecided"
+        "undecided",
+        "other"
       ]
     },
+    "ownership_other": { "type": "string", "description": "Required free-text ownership description when ownership_model is other", "minLength": 1, "maxLength": 200 },
     "productive_uses": {
       "type": "array",
       "description": "Income-generating or productive activities enabled by the project",
@@ -145,7 +148,28 @@
         "any_instrument"
       ],
       "default": "grant_preferred"
+    },
+    "readiness_evidence": {
+      "type": "object",
+      "description": "Evidence status and notes used by the proposal-readiness checklist",
+      "required": ["legal_entity_registration", "land_site_documentation", "community_stakeholder_endorsement", "ministry_agency_endorsement", "demand_assessment", "technical_design", "detailed_budget", "financial_projections", "co_financing_documentation", "implementation_timeline", "mel_framework"],
+      "properties": {
+        "legal_entity_registration": { "$ref": "#/definitions/readinessEvidenceItem" }, "land_site_documentation": { "$ref": "#/definitions/readinessEvidenceItem" },
+        "community_stakeholder_endorsement": { "$ref": "#/definitions/readinessEvidenceItem" }, "ministry_agency_endorsement": { "$ref": "#/definitions/readinessEvidenceItem" },
+        "demand_assessment": { "$ref": "#/definitions/readinessEvidenceItem" }, "technical_design": { "$ref": "#/definitions/readinessEvidenceItem" },
+        "detailed_budget": { "$ref": "#/definitions/readinessEvidenceItem" }, "financial_projections": { "$ref": "#/definitions/readinessEvidenceItem" },
+        "co_financing_documentation": { "$ref": "#/definitions/readinessEvidenceItem" }, "implementation_timeline": { "$ref": "#/definitions/readinessEvidenceItem" },
+        "mel_framework": { "$ref": "#/definitions/readinessEvidenceItem" }
+      },
+      "additionalProperties": false
     }
+  },
+  "allOf": [
+    { "if": { "properties": { "technology_type": { "const": "other" } } }, "then": { "required": ["technology_other"] } },
+    { "if": { "properties": { "ownership_model": { "const": "other" } } }, "then": { "required": ["ownership_other"] } }
+  ],
+  "definitions": {
+    "readinessEvidenceItem": { "type": "object", "required": ["status"], "properties": { "status": { "type": "string", "enum": ["complete", "partial", "missing", "unknown"] }, "details": { "type": "string" } }, "additionalProperties": false }
   },
   "additionalProperties": false
 }

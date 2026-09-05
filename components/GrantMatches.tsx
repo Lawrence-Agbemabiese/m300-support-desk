@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
 import { Progress } from '@/components/ui/Progress';
 import type { GrantMatch, GrantMatchItem } from '@/lib/schemas';
+import { fundingTierLabel, normalizeFundingTier } from '@/lib/funding-tiers';
 
 interface GrantMatchesProps {
   grants: GrantMatch;
@@ -15,9 +16,8 @@ function GrantCard({ match, rank }: { match: GrantMatchItem; rank: number }) {
   const tierColors = {
     tier_1: 'bg-emerald-100 text-emerald-800 border-emerald-200',
     tier_2: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    tier_3: 'bg-orange-100 text-orange-800 border-orange-200',
-    tier_4: 'bg-red-100 text-red-800 border-red-200',
   };
+  const fundingTier = normalizeFundingTier(match.debt_sensitivity_tier);
 
   const getScoreColor = (score: number) => {
     if (score >= 70) return 'emerald';
@@ -41,8 +41,8 @@ function GrantCard({ match, rank }: { match: GrantMatchItem; rank: number }) {
               <h4 className="font-medium text-gray-900">{match.funder_name}</h4>
               <div className="flex items-center space-x-2 mt-1">
                 <span className="text-sm text-gray-500">{match.instrument_type.replace(/_/g, ' ')}</span>
-                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${tierColors[match.debt_sensitivity_tier || 'tier_1']}`}>
-                  {match.debt_sensitivity_tier?.replace('_', ' ').toUpperCase()}
+                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${tierColors[fundingTier]}`}>
+                  {fundingTierLabel(fundingTier)}
                 </span>
               </div>
             </div>
@@ -146,18 +146,14 @@ export function GrantMatches({ grants }: GrantMatchesProps) {
         {grants.debt_sensitivity_summary && (
           <div className="bg-blue-50 rounded-lg p-4">
             <h3 className="font-medium text-blue-900 mb-2">Debt Sensitivity Summary</h3>
-            <div className="flex space-x-4 mb-2">
+            <div className="flex flex-wrap gap-4 mb-2">
               <div className="flex items-center space-x-1">
                 <span className="w-3 h-3 rounded-full bg-emerald-500" />
-                <span className="text-sm text-gray-600">Tier 1: {grants.debt_sensitivity_summary.tier_1_count}</span>
+                <span className="text-sm text-gray-600">Tier 1 (low/no debt): {grants.debt_sensitivity_summary.tier_1_count}</span>
               </div>
               <div className="flex items-center space-x-1">
                 <span className="w-3 h-3 rounded-full bg-yellow-500" />
-                <span className="text-sm text-gray-600">Tier 2: {grants.debt_sensitivity_summary.tier_2_count}</span>
-              </div>
-              <div className="flex items-center space-x-1">
-                <span className="w-3 h-3 rounded-full bg-orange-500" />
-                <span className="text-sm text-gray-600">Tier 3: {grants.debt_sensitivity_summary.tier_3_count}</span>
+                <span className="text-sm text-gray-600">Tier 2 (some debt): {grants.debt_sensitivity_summary.tier_2_count}</span>
               </div>
             </div>
             <p className="text-sm text-blue-800">{grants.debt_sensitivity_summary.recommendation}</p>

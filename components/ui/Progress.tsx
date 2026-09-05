@@ -1,4 +1,5 @@
 import React from 'react';
+import { fundingTierLabel, normalizeFundingTier, type FundingTierValue } from '@/lib/funding-tiers';
 
 interface ProgressProps {
   value: number;
@@ -58,25 +59,14 @@ export function Progress({
 interface ScoreGaugeProps {
   score: number;
   label?: string;
-  tier?: 'tier_1' | 'tier_2' | 'tier_3' | 'tier_4';
+  tier?: FundingTierValue;
 }
 
 export function ScoreGauge({ score, label, tier }: ScoreGaugeProps) {
+  const fundingTier = normalizeFundingTier(tier);
   const getColor = () => {
-    if (tier === 'tier_1' || score >= 70) return 'emerald';
-    if (tier === 'tier_2' || score >= 50) return 'yellow';
-    if (tier === 'tier_3' || score >= 30) return 'orange';
-    return 'red';
-  };
-
-  const getTierLabel = () => {
-    switch (tier) {
-      case 'tier_1': return 'Grant-Only (No Debt)';
-      case 'tier_2': return 'Minimal Debt Exposure';
-      case 'tier_3': return 'Moderate Debt Risk';
-      case 'tier_4': return 'High Debt Risk';
-      default: return '';
-    }
+    if (fundingTier === 'tier_1' || score >= 70) return 'emerald';
+    return 'yellow';
   };
 
   return (
@@ -89,14 +79,11 @@ export function ScoreGauge({ score, label, tier }: ScoreGaugeProps) {
       {tier && (
         <div className="flex items-center space-x-2">
           <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
-            ${tier === 'tier_1' ? 'bg-emerald-100 text-emerald-800' : ''}
-            ${tier === 'tier_2' ? 'bg-yellow-100 text-yellow-800' : ''}
-            ${tier === 'tier_3' ? 'bg-orange-100 text-orange-800' : ''}
-            ${tier === 'tier_4' ? 'bg-red-100 text-red-800' : ''}
+            ${fundingTier === 'tier_1' ? 'bg-emerald-100 text-emerald-800' : 'bg-yellow-100 text-yellow-800'}
           `}>
-            {tier.replace('_', ' ').toUpperCase()}
+            {fundingTier === 'tier_1' ? 'TIER 1' : 'TIER 2'}
           </span>
-          <span className="text-sm text-gray-500">{getTierLabel()}</span>
+          <span className="text-sm text-gray-500">{fundingTierLabel(fundingTier).split('— ')[1]}</span>
         </div>
       )}
     </div>

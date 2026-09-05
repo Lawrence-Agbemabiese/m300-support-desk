@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { isAdmin, requireAdmin, requireAuth } from '@/lib/access-control';
-import { normalizeLegacyProblemStatement } from '@/lib/agents/proposal-coach';
-import type { AnalysisResult, ProjectIntake, PolicyInterpretation, GrantMatchResult, ProposalCoach, TradeOffExplorerResult } from '@/lib/schemas';
 import { z } from 'zod';
 import { rejectIfCrossOrigin } from '@/lib/request-security';
+import { projectToAnalysisResult, projectToIntake } from '@/lib/project-record';
 
 const ProjectUpdateSchema = z.object({
   status: z.enum(['submitted', 'in_review', 'approved', 'needs_info', 'archived']).optional(),
@@ -35,6 +34,7 @@ export async function GET(
             organization: true,
           },
         },
+        revisions: { orderBy: { revisionNumber: 'desc' }, select: { id: true, createdAt: true, revisionNumber: true, source: true, enhanced: true, model: true, processingTimeMs: true, createdByAdvisor: { select: { id: true, name: true } } } },
       },
     });
 
@@ -45,51 +45,7 @@ export async function GET(
       );
     }
 
-    // Reconstruct the full analysis result
-    const tradeoffsRaw = (project as any).tradeoffsResult as string | null | undefined;
-    const parsedCoach = project.coachResult
-      ? (JSON.parse(project.coachResult) as ProposalCoach)
-      : null;
-    const normalizedCoach = parsedCoach
-      ? {
-          ...parsedCoach,
-          proposal_outline: {
-            ...parsedCoach.proposal_outline,
-            problem_statement: normalizeLegacyProblemStatement(
-              parsedCoach.proposal_outline.problem_statement,
-              project.locationDescription,
-              project.country
-            ),
-          },
-        }
-      : null;
-
-    const analysisResult: AnalysisResult | null = project.policyResult && normalizedCoach ? {
-      project: {
-        project_name: project.projectName,
-        country: project.country,
-        location_description: project.locationDescription,
-        technology_type: project.technologyType as ProjectIntake['technology_type'],
-        capacity_kw: project.capacityKw ?? undefined,
-        target_beneficiaries: project.targetBeneficiaries,
-        ownership_model: project.ownershipModel as ProjectIntake['ownership_model'],
-        productive_uses: JSON.parse(project.productiveUses),
-        estimated_cost_usd: project.estimatedCostUsd,
-        existing_funding: project.existingFunding ?? undefined,
-        project_stage: project.projectStage as ProjectIntake['project_stage'],
-        community_engagement: project.communityEngagement ?? undefined,
-        additional_context: project.additionalContext ?? undefined,
-        debt_preference: project.debtPreference as ProjectIntake['debt_preference'],
-      },
-      policy: JSON.parse(project.policyResult) as PolicyInterpretation,
-      grants: JSON.parse(project.grantsResult!) as GrantMatchResult,
-      coach: normalizedCoach,
-      tradeoffs: tradeoffsRaw ? (JSON.parse(tradeoffsRaw) as TradeOffExplorerResult) : undefined,
-      metadata: {
-        enhanced: project.enhanced,
-        processing_time_ms: project.processingTimeMs ?? 0,
-      },
-    } : null;
+    const analysisResult = projectToAnalysisResult(project);
 
     return NextResponse.json({
       id: project.id,
@@ -98,10 +54,15 @@ export async function GET(
       status: project.status,
       advisorNotes: project.advisorNotes,
       advisor: project.advisor,
+      canReanalyse: sessionIsAdmin || project.advisorId === session.id,
+      currentRevision: project.currentRevision,
+      revisions: project.revisions,
+      intake: projectToIntake(project),
       summary: {
         projectName: project.projectName,
         country: project.country,
         technologyType: project.technologyType,
+        technologyOther: project.technologyOther,
         estimatedCostUsd: project.estimatedCostUsd,
         m300Score: project.m300Score,
         debtTier: project.debtTier,

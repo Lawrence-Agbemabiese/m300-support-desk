@@ -7,19 +7,17 @@ export const M300_SYSTEM_PROMPT = `You are an expert advisor for Mission 300, he
 
 KEY PRINCIPLES (ALWAYS APPLY):
 
-1. DEBT SENSITIVITY: Africa's current energy financing relies heavily on concessional loans and private capital de-risking, which adds to sovereign debt and causes capital flight. Your role is to help projects access GRANT funding that avoids debt creation.
+1. DEBT SENSITIVITY: Evaluate repayment, currency, guarantee, and contingent-liability exposure explicitly. Prioritize grants while treating debt sensitivity as a weighted consideration, not an automatic exclusion.
 
 2. GRANT-FIRST APPROACH: Always prioritize grants over loans. When evaluating funding options:
-   - Tier 1 (Green): Grant-only instruments - IDEAL
-   - Tier 2 (Yellow): Results-based grants requiring bridge financing - GOOD
-   - Tier 3 (Orange): Blended finance with debt components - CAUTION
-   - Tier 4 (Red): Loan-heavy or requiring sovereign guarantees - AVOID
+   - Tier 1 (Green): Low/no-debt finance preferred
+   - Tier 2 (Yellow): Some debt accepted, with terms and guarantees reviewed
 
 3. COMMUNITY OWNERSHIP: Strongly prefer community cooperatives and public utility ownership models because they:
    - Keep revenues within the community
    - Prevent capital flight to external investors
    - Build local capacity
-   - Don't require sovereign guarantees
+   - Can reduce reliance on external guarantees when well structured
 
 4. PRODUCTIVE USE: Energy projects with productive use components (processing, cold storage, etc.) are more sustainable and attractive to grant funders.
 
@@ -46,9 +44,9 @@ export function getPolicyEnhancementPrompt(
 PROJECT DETAILS:
 - Name: ${project.project_name}
 - Country: ${project.country}
-- Technology: ${project.technology_type.replace(/_/g, ' ')}
+- Technology: ${project.technology_type === 'other' && project.technology_other ? project.technology_other : project.technology_type.replace(/_/g, ' ')}
 - Capacity: ${project.capacity_kw || 'Not specified'} kW
-- Ownership: ${project.ownership_model.replace(/_/g, ' ')}
+- Ownership: ${project.ownership_model === 'other' && project.ownership_other ? project.ownership_other : project.ownership_model.replace(/_/g, ' ')}
 - Cost: $${project.estimated_cost_usd.toLocaleString()}
 - Beneficiaries: ${project.target_beneficiaries}
 - Productive Uses: ${project.productive_uses?.join(', ') || 'None specified'}
@@ -56,7 +54,7 @@ PROJECT DETAILS:
 
 INITIAL ANALYSIS:
 - M300 Alignment Score: ${baseInterpretation.m300_alignment_score}/100
-- Debt Sensitivity Tier: ${baseInterpretation.debt_sensitivity_tier}
+- Funding Tier: ${baseInterpretation.debt_sensitivity_tier === 'tier_1' ? 'Tier 1 — low/no debt preferred' : 'Tier 2 — some debt accepted'}
 - Grant-Suitable Elements: ${baseInterpretation.grant_suitable_elements.join('; ')}
 
 Provide a 2-3 paragraph enhanced narrative that a project team could use to understand their grant positioning and what to emphasize in applications.`;
@@ -81,7 +79,7 @@ ${baseContent}
 
 Improve this section by:
 1. Making language more compelling for grant reviewers
-2. Emphasizing M300 alignment and debt-free approach
+2. Emphasizing M300 alignment and a debt-sensitive, grant-first approach
 3. Adding specific, relevant details
 4. Ensuring clear connection to funder priorities
 5. Maintaining focus on community ownership benefits
@@ -107,8 +105,8 @@ export function getFunderGuidancePrompt(
 PROJECT SUMMARY:
 - Name: ${project.project_name}
 - Country: ${project.country}
-- Technology: ${project.technology_type.replace(/_/g, ' ')}
-- Ownership: ${project.ownership_model.replace(/_/g, ' ')}
+- Technology: ${project.technology_type === 'other' && project.technology_other ? project.technology_other : project.technology_type.replace(/_/g, ' ')}
+- Ownership: ${project.ownership_model === 'other' && project.ownership_other ? project.ownership_other : project.ownership_model.replace(/_/g, ' ')}
 - Cost: $${project.estimated_cost_usd.toLocaleString()}
 
 FIT ANALYSIS:
@@ -119,7 +117,7 @@ FIT ANALYSIS:
 
 M300 CONTEXT:
 - Alignment Score: ${interpretation.m300_alignment_score}/100
-- Debt Tier: ${interpretation.debt_sensitivity_tier}
+- Funding Tier: ${interpretation.debt_sensitivity_tier === 'tier_1' ? 'Tier 1 — low/no debt preferred' : 'Tier 2 — some debt accepted'}
 
 Provide:
 1. 3-4 key priorities this funder looks for
@@ -158,8 +156,8 @@ export function getRiskAnalysisPrompt(
 
 PROJECT: ${project.project_name}
 COUNTRY: ${project.country}
-OWNERSHIP: ${project.ownership_model.replace(/_/g, ' ')}
-DEBT TIER: ${interpretation.debt_sensitivity_tier}
+OWNERSHIP: ${project.ownership_model === 'other' && project.ownership_other ? project.ownership_other : project.ownership_model.replace(/_/g, ' ')}
+FUNDING TIER: ${interpretation.debt_sensitivity_tier === 'tier_1' ? 'Tier 1 — low/no debt preferred' : 'Tier 2 — some debt accepted'}
 
 Current Identified Risks:
 - Debt Risks: ${interpretation.debt_exposure_risks.join('; ')}

@@ -12,15 +12,27 @@ const ownershipScores: OwnershipScores = {
   private_ipp: 0,
 };
 
-const tierMap: { [key: string]: 'tier_1' | 'tier_2' | 'tier_3' | 'tier_4' } = {
-  community_cooperative: 'tier_1',
-  public_utility: 'tier_1',
-  public_community_hybrid: 'tier_1',
-  private_with_benefit_sharing: 'tier_2',
-  private_ipp: 'tier_3',
+type SupportedProjectIntake = ProjectIntake & {
+  technology_other?: string;
+  ownership_other?: string;
 };
 
+function projectDebtTier(debtPreference: ProjectIntake['debt_preference']): 'tier_1' | 'tier_2' {
+  return debtPreference === 'grant_only' || debtPreference === 'grant_preferred'
+    ? 'tier_1'
+    : 'tier_2';
+}
+
+function projectLabel(value: string, customValue?: string): string {
+  if (value === 'other' && customValue?.trim()) {
+    return customValue.trim();
+  }
+
+  return value.replace(/_/g, ' ');
+}
+
 export function interpretPolicy(project: ProjectIntake): PolicyInterpretation {
+  const extendedProject = project as SupportedProjectIntake;
   const ownership = project.ownership_model || 'undecided';
   const productiveUses = project.productive_uses || [];
   const debtPreference = project.debt_preference || 'grant_preferred';
@@ -38,14 +50,13 @@ export function interpretPolicy(project: ProjectIntake): PolicyInterpretation {
   }
 
   // Debt preference bonus
-  if (debtPreference === 'grant_only') {
-    score += 10;
-  }
+  score += debtPreference === 'grant_only' ? 10 : debtPreference === 'grant_preferred' ? 5 : 0;
 
   score = Math.min(score, 100);
 
-  // Determine debt sensitivity tier
-  const debtTier = tierMap[ownership] || 'tier_2';
+  // Financing preference determines project debt tier. Ownership remains an
+  // independent alignment and governance signal; it must never stand in for debt.
+  const debtTier = projectDebtTier(debtPreference);
 
   // Generate grant-suitable elements
   const grantSuitable: string[] = [];
@@ -61,6 +72,8 @@ export function interpretPolicy(project: ProjectIntake): PolicyInterpretation {
   grantSuitable.push('Last-mile rural electrification focus');
   if (debtPreference === 'grant_only') {
     grantSuitable.push('Explicit grant-only preference aligns with M300 recommendations');
+  } else if (debtPreference === 'grant_preferred') {
+    grantSuitable.push('Low/no-debt financing preference aligns with M300 recommendations');
   }
 
   // Generate debt risks
@@ -71,7 +84,13 @@ export function interpretPolicy(project: ProjectIntake): PolicyInterpretation {
   } else if (ownership.includes('private')) {
     debtRisks.push('Private component may create guarantee requirements');
   } else {
-    debtRisks.push('None identified under current structure');
+    debtRisks.push('No debt exposure identified from intake; verify proposed financing terms');
+  }
+  if (debtPreference === 'open_to_blended') {
+    debtRisks.push('Blended finance may introduce repayment, bridge-finance, currency, or guarantee exposure');
+  }
+  if (debtPreference === 'any_instrument') {
+    debtRisks.push('Debt terms, obligor, currency, guarantees, and contingent liabilities require full review');
   }
 
   // Generate private capital risks
@@ -82,13 +101,14 @@ export function interpretPolicy(project: ProjectIntake): PolicyInterpretation {
   }
 
   // Generate alignment narrative
-  const techType = project.technology_type.replace(/_/g, ' ');
+  const techType = projectLabel(project.technology_type, extendedProject.technology_other);
+  const ownershipLabel = projectLabel(ownership, extendedProject.ownership_other);
   const alignmentLevel = score >= 70 ? 'strong' : score >= 50 ? 'moderate' : 'weak';
 
-  let narrative = `This ${techType} project in ${country} demonstrates ${alignmentLevel} alignment with M300 debt-sensitivity principles (score: ${score}/100). The ${ownership.replace(/_/g, ' ')} ownership model `;
+  let narrative = `This ${techType} project in ${country} demonstrates ${alignmentLevel} alignment with M300 debt-sensitivity principles (score: ${score}/100). The ${ownershipLabel} ownership model `;
 
   if (score >= 70) {
-    narrative += 'supports grant eligibility by ensuring revenues remain local and no sovereign debt is created.';
+    narrative += 'supports local-benefit and public-interest objectives, subject to governance and funder verification.';
   } else {
     narrative += 'may face challenges with grant funders who prefer community/public ownership.';
   }
@@ -108,10 +128,12 @@ export function interpretPolicy(project: ProjectIntake): PolicyInterpretation {
 
   // Generate recommended framing
   const framingType = ownership.includes('community') ? 'community-led' : 'locally-owned';
-  const framing = `Position as ${framingType} energy access project that advances M300 electrification goals without adding to ${country}'s debt burden.`;
+  const framing = debtTier === 'tier_1'
+    ? `Position as a ${framingType} energy access project that advances M300 electrification goals with a clear low/no-debt preference for ${country}.`
+    : `Position as a ${framingType} energy access project that advances M300 electrification goals while explicitly managing repayment, currency, guarantee, and contingent-liability risks in ${country}.`;
 
   // Community ownership justification
-  const justification = `The ${ownership.replace(/_/g, ' ')} structure keeps revenues within ${country}, builds local capacity, and prevents capital flight that occurs when external investors extract profits.`;
+  const justification = `The ${ownershipLabel} structure can keep revenues within ${country}, build local capacity, and reduce capital-flight risk when governance and benefit-sharing safeguards are verified.`;
 
   return {
     project_name: project.project_name,
@@ -126,7 +148,7 @@ export function interpretPolicy(project: ProjectIntake): PolicyInterpretation {
     recommended_framing: framing,
     debt_sensitivity_tier: debtTier,
     m300_specific_tags: {
-      avoids_sovereign_debt: debtTier === 'tier_1',
+      avoids_sovereign_debt: debtPreference === 'grant_only',
       supports_public_ownership: ownership.includes('public') || ownership === 'community_cooperative',
       prevents_capital_flight: ownership === 'community_cooperative' || ownership.includes('public'),
       preserves_fiscal_capacity: debtPreference === 'grant_only',
