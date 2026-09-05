@@ -5,11 +5,14 @@ import { Button } from '@/components/ui/Button';
 import { Input, Textarea } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
-import type { ProjectIntake } from '@/lib/schemas';
+import { ProjectIntakeSchema, type ProjectIntake } from '@/lib/schemas';
 
 interface ProjectIntakeFormProps {
   onSubmit: (data: ProjectIntake, options: { enhance: boolean; enhancedMode: boolean }) => void;
   loading?: boolean;
+  initialData?: ProjectIntake;
+  title?: string;
+  submitLabel?: string;
 }
 
 const technologyOptions = [
@@ -32,6 +35,7 @@ const ownershipOptions = [
   { value: 'private_with_benefit_sharing', label: 'Private with Benefit Sharing' },
   { value: 'private_ipp', label: 'Private IPP' },
   { value: 'undecided', label: 'Undecided' },
+  { value: 'other', label: 'Other' },
 ];
 
 const stageOptions = [
@@ -163,16 +167,17 @@ const EXAMPLE_PROJECTS: Record<'minigrid' | 'health', Partial<ProjectIntake>> = 
   },
 };
 
-export function ProjectIntakeForm({ onSubmit, loading = false }: ProjectIntakeFormProps) {
+export function ProjectIntakeForm({ onSubmit, loading = false, initialData, title = 'Project Intake Form', submitLabel = 'Analyze Project' }: ProjectIntakeFormProps) {
   const [step, setStep] = useState(1);
   const [enhance, setEnhance] = useState(false);
   const [enhancedMode, setEnhancedMode] = useState(false);
-  const [formData, setFormData] = useState<Partial<ProjectIntake>>({
+  const [formData, setFormData] = useState<Partial<ProjectIntake>>(() => ({
     project_stage: 'concept',
     debt_preference: 'grant_preferred',
     productive_uses: [],
-    readiness_evidence: defaultReadinessEvidence,
-  });
+    ...initialData,
+    readiness_evidence: { ...defaultReadinessEvidence, ...(initialData?.readiness_evidence || {}) },
+  }));
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const updateField = <K extends keyof ProjectIntake>(field: K, value: ProjectIntake[K]) => {
@@ -237,6 +242,7 @@ export function ProjectIntakeForm({ onSubmit, loading = false }: ProjectIntakeFo
       if (!formData.technology_type) {
         newErrors.technology_type = 'Technology type is required';
       }
+      if (formData.technology_type === 'other' && !formData.technology_other?.trim()) newErrors.technology_other = 'Describe the technology';
       if (!formData.estimated_cost_usd || formData.estimated_cost_usd <= 0) {
         newErrors.estimated_cost_usd = 'Estimated cost must be greater than 0';
       }
@@ -246,6 +252,7 @@ export function ProjectIntakeForm({ onSubmit, loading = false }: ProjectIntakeFo
       if (!formData.ownership_model) {
         newErrors.ownership_model = 'Ownership model is required';
       }
+      if (formData.ownership_model === 'other' && !formData.ownership_other?.trim()) newErrors.ownership_other = 'Describe the ownership model';
       if (!formData.target_beneficiaries || formData.target_beneficiaries.length < 10) {
         newErrors.target_beneficiaries = 'Target beneficiaries must be at least 10 characters';
       }
@@ -263,16 +270,25 @@ export function ProjectIntakeForm({ onSubmit, loading = false }: ProjectIntakeFo
 
   const handleSubmit = () => {
     if (validateStep(step)) {
-      onSubmit(formData as ProjectIntake, { enhance, enhancedMode });
+      const parsed = ProjectIntakeSchema.safeParse(formData);
+      if (!parsed.success) {
+        const schemaErrors: Record<string, string> = {};
+        for (const issue of parsed.error.errors) { const field = String(issue.path[0] || 'form'); if (!schemaErrors[field]) schemaErrors[field] = issue.message; }
+        setErrors(schemaErrors);
+        const firstField = String(parsed.error.errors[0]?.path[0] || '');
+        const stepByField: Record<string, number> = { project_name: 1, country: 1, location_description: 1, contact_info: 1, technology_type: 2, technology_other: 2, capacity_kw: 2, productive_uses: 2, estimated_cost_usd: 2, ownership_model: 3, ownership_other: 3, target_beneficiaries: 3, community_engagement: 3, existing_funding: 3, readiness_evidence: 4 };
+        setStep(stepByField[firstField] || 5); return;
+      }
+      onSubmit(parsed.data, { enhance, enhancedMode });
     }
   };
 
   return (
     <Card className="max-w-2xl mx-auto">
       <CardHeader>
-        <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-gray-900">Project Intake Form</h2>
-          <div className="flex space-x-2">
+        <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
+          <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
+          <div className="flex flex-col gap-2 sm:flex-row">
             <Button variant="outline" size="sm" onClick={() => loadExample('minigrid')}>
               Ghana Mini-Grid
             </Button>
@@ -328,6 +344,12 @@ export function ProjectIntakeForm({ onSubmit, loading = false }: ProjectIntakeFo
               rows={3}
               required
             />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Input label="Contact Name" value={formData.contact_info?.name || ''} onChange={(e) => updateField('contact_info', { ...formData.contact_info, name: e.target.value })} />
+              <Input label="Organization" value={formData.contact_info?.organization || ''} onChange={(e) => updateField('contact_info', { ...formData.contact_info, organization: e.target.value })} />
+              <Input label="Contact Email" type="email" value={formData.contact_info?.email || ''} onChange={(e) => updateField('contact_info', { ...formData.contact_info, email: e.target.value })} error={errors.contact_info} />
+              <Input label="Contact Phone" value={formData.contact_info?.phone || ''} onChange={(e) => updateField('contact_info', { ...formData.contact_info, phone: e.target.value })} />
+            </div>
           </div>
         )}
 
@@ -343,6 +365,7 @@ export function ProjectIntakeForm({ onSubmit, loading = false }: ProjectIntakeFo
               error={errors.technology_type}
               required
             />
+            {formData.technology_type === 'other' && <Input label="Describe Technology" placeholder="e.g., biomass gasification" value={formData.technology_other || ''} onChange={(e) => updateField('technology_other', e.target.value)} error={errors.technology_other} required />}
             <Input
               label="Capacity (kW)"
               type="number"
@@ -397,6 +420,7 @@ export function ProjectIntakeForm({ onSubmit, loading = false }: ProjectIntakeFo
               helperText="Community cooperative is recommended for best grant alignment"
               required
             />
+            {formData.ownership_model === 'other' && <Input label="Describe Ownership Model" placeholder="Describe the legal and beneficial ownership arrangement" value={formData.ownership_other || ''} onChange={(e) => updateField('ownership_other', e.target.value)} error={errors.ownership_other} required />}
             <Textarea
               label="Target Beneficiaries"
               placeholder="Describe who will benefit (households, institutions, businesses...)"
@@ -543,7 +567,7 @@ export function ProjectIntakeForm({ onSubmit, loading = false }: ProjectIntakeFo
             <Button onClick={handleNext}>Next</Button>
           ) : (
             <Button onClick={handleSubmit} loading={loading}>
-              Analyze Project
+              {submitLabel}
             </Button>
           )}
         </div>

@@ -24,6 +24,7 @@ export const OwnershipModel = z.enum([
   'private_with_benefit_sharing',
   'private_ipp',
   'undecided',
+  'other',
 ]);
 
 export const ProjectStage = z.enum([
@@ -44,10 +45,10 @@ export const DebtPreference = z.enum([
 ]);
 
 export const ContactInfoSchema = z.object({
-  name: z.string().optional(),
-  organization: z.string().optional(),
-  email: z.string().email().optional(),
-  phone: z.string().optional(),
+  name: z.string().trim().max(200).optional(),
+  organization: z.string().trim().max(200).optional(),
+  email: z.union([z.string().trim().email(), z.literal('')]).optional(),
+  phone: z.string().trim().max(80).optional(),
 });
 
 export const ReadinessEvidenceStatus = z.enum(['complete', 'partial', 'missing', 'unknown']);
@@ -76,10 +77,12 @@ export const ProjectIntakeSchema = z.object({
   country: z.string().min(2),
   location_description: z.string().min(10),
   technology_type: TechnologyType,
+  technology_other: z.string().trim().max(200).optional(),
   capacity_kw: z.number().min(0).optional(),
   target_beneficiaries: z.string().min(10),
   ownership_model: OwnershipModel,
-  productive_uses: z.array(z.string()).optional(),
+  ownership_other: z.string().trim().max(200).optional(),
+  productive_uses: z.array(z.string()).default([]),
   estimated_cost_usd: z.number().min(0),
   existing_funding: z.string().optional(),
   project_stage: ProjectStage.default('concept'),
@@ -88,6 +91,13 @@ export const ProjectIntakeSchema = z.object({
   contact_info: ContactInfoSchema.optional(),
   debt_preference: DebtPreference.default('grant_preferred'),
   readiness_evidence: ReadinessEvidenceSchema.optional(),
+}).superRefine((project, context) => {
+  if (project.technology_type === 'other' && !project.technology_other?.trim()) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ['technology_other'], message: 'Describe the technology when Other is selected' });
+  }
+  if (project.ownership_model === 'other' && !project.ownership_other?.trim()) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ['ownership_other'], message: 'Describe the ownership model when Other is selected' });
+  }
 });
 
 export type ProjectIntake = z.infer<typeof ProjectIntakeSchema>;
@@ -96,7 +106,7 @@ export type ProjectIntake = z.infer<typeof ProjectIntakeSchema>;
 // Policy Interpretation Schema
 // ============================================================================
 
-export const DebtSensitivityTier = z.enum(['tier_1', 'tier_2', 'tier_3', 'tier_4']);
+export const DebtSensitivityTier = z.enum(['tier_1', 'tier_2']);
 
 export const M300SpecificTags = z.object({
   avoids_sovereign_debt: z.boolean().optional(),
@@ -170,8 +180,6 @@ export const ExcludedFunderSchema = z.object({
 export const DebtSensitivitySummary = z.object({
   tier_1_count: z.number().int().optional(),
   tier_2_count: z.number().int().optional(),
-  tier_3_count: z.number().int().optional(),
-  tier_4_count: z.number().int().optional(),
   recommendation: z.string().optional(),
 });
 
@@ -291,6 +299,7 @@ export const AnalysisResultSchema = z.object({
     timestamp: z.string().optional(),
     processing_time_ms: z.number().optional(),
     project_id: z.string().optional(),
+    revision: z.number().int().positive().optional(),
   }),
 });
 

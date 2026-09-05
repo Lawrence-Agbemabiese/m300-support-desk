@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/lib/auth-context';
+import { fundingTierName } from '@/lib/funding-tiers';
 
 interface ProjectSummary {
   id: string;
@@ -13,6 +14,7 @@ interface ProjectSummary {
   projectName: string;
   country: string;
   technologyType: string;
+  technologyOther: string | null;
   estimatedCostUsd: number;
   ownershipModel: string;
   projectStage: string;
@@ -50,8 +52,6 @@ const statusColors: Record<string, string> = {
 const tierColors: Record<string, string> = {
   tier_1: 'text-emerald-600',
   tier_2: 'text-yellow-600',
-  tier_3: 'text-orange-600',
-  tier_4: 'text-red-600',
 };
 
 export default function ProjectsPage() {
@@ -61,6 +61,8 @@ export default function ProjectsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<string>('all');
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [myProjectsOnly, setMyProjectsOnly] = useState(false);
   const [pagination, setPagination] = useState({
     total: 0,
@@ -93,6 +95,7 @@ export default function ProjectsPage() {
       if (canViewAllProjects && myProjectsOnly) {
         params.set('my_projects', 'true');
       }
+      if (debouncedSearch) params.set('q', debouncedSearch);
 
       const response = await fetch(`/api/projects?${params}`);
       if (!response.ok) throw new Error('Failed to fetch projects');
@@ -105,7 +108,9 @@ export default function ProjectsPage() {
     } finally {
       setLoading(false);
     }
-  }, [advisor, canViewAllProjects, filter, myProjectsOnly]);
+  }, [advisor, canViewAllProjects, filter, myProjectsOnly, debouncedSearch]);
+
+  useEffect(() => { const timer = window.setTimeout(() => setDebouncedSearch(search.trim()), 300); return () => window.clearTimeout(timer); }, [search]);
 
   useEffect(() => {
     fetchProjects();
@@ -136,7 +141,7 @@ export default function ProjectsPage() {
         </div>
       ) : (
         <>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Project Submissions</h1>
           <p className="text-gray-600">
@@ -170,8 +175,10 @@ export default function ProjectsPage() {
       )}
 
       {/* Filters */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-2">
+      <div className="mb-6 space-y-4">
+        <label className="block"><span className="mb-1 block text-sm font-medium text-gray-700">Search projects</span><input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Name, country, location, technology, ownership, or beneficiaries" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500" /></label>
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm text-gray-500">Status:</span>
           {['all', 'submitted', 'in_review', 'approved', 'needs_info', 'archived'].map((status) => (
             <button
@@ -199,6 +206,7 @@ export default function ProjectsPage() {
             <span className="text-sm text-gray-700">My Projects Only</span>
           </label>
         )}
+        </div>
       </div>
 
       {error && (
@@ -246,12 +254,12 @@ export default function ProjectsPage() {
         <>
           <div className="space-y-4">
             {projects.map((project) => (
-              <Link key={project.id} href={`/projects/${project.id}`}>
+              <Link key={project.id} href={`/projects/${project.id}`} className="block">
                 <Card className="hover:border-emerald-300 transition-colors cursor-pointer">
                   <CardContent className="py-4">
-                    <div className="flex items-start justify-between">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                       <div className="flex-1">
-                        <div className="flex items-center space-x-3">
+                        <div className="flex flex-wrap items-center gap-3">
                           <h3 className="text-lg font-semibold text-gray-900">
                             {project.projectName}
                           </h3>
@@ -268,17 +276,13 @@ export default function ProjectsPage() {
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center space-x-4 mt-1 text-sm text-gray-500">
+                        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-500">
                           <span>{project.country}</span>
-                          <span>|</span>
-                          <span>{project.technologyType.replace(/_/g, ' ')}</span>
-                          <span>|</span>
+                          <span>{project.technologyType === 'other' && project.technologyOther ? project.technologyOther : project.technologyType.replace(/_/g, ' ')}</span>
                           <span>{formatCurrency(project.estimatedCostUsd)}</span>
-                          <span>|</span>
                           <span>{formatDate(project.createdAt)}</span>
                           {project.advisor && (
                             <>
-                              <span>|</span>
                               <span className="text-emerald-600">
                                 {project.advisor.name}
                                 {project.advisor.organization && ` (${project.advisor.organization})`}
@@ -288,7 +292,7 @@ export default function ProjectsPage() {
                         </div>
                       </div>
 
-                      <div className="flex items-center space-x-6 text-right">
+                      <div className="grid grid-cols-1 gap-3 text-left sm:grid-cols-3 lg:min-w-[420px] lg:text-right">
                         {project.m300Score !== null && (
                           <div>
                             <div className="text-2xl font-bold text-gray-900">
@@ -304,9 +308,9 @@ export default function ProjectsPage() {
                                 tierColors[project.debtTier] || 'text-gray-600'
                               }`}
                             >
-                              {project.debtTier.replace('_', ' ').toUpperCase()}
+                              {fundingTierName(project.debtTier)}
                             </div>
-                            <div className="text-xs text-gray-500">Debt Tier</div>
+                            <div className="text-xs text-gray-500">Funding Tier</div>
                           </div>
                         )}
                         {project.topFunder && (

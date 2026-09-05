@@ -7,6 +7,7 @@ import { rejectIfCrossOrigin } from '@/lib/request-security';
 const PatchSchema = z.object({
   status: z.enum(['approved', 'rejected', 'duplicate', 'pending']),
   reviewNotes: z.string().max(2000).optional(),
+  sourceUrl: z.string().trim().url().max(2000).optional(),
 });
 
 // GET - Get single discovered grant
@@ -63,13 +64,16 @@ export async function PATCH(
         { status: 400 }
       );
     }
-    const { status, reviewNotes } = parsed.data;
+    const { status, reviewNotes, sourceUrl } = parsed.data;
+    if (status === 'approved' && (!sourceUrl || !reviewNotes || reviewNotes.trim().length < 10)) return NextResponse.json({ error: 'Approval requires an official source URL and review notes describing what was verified' }, { status: 400 });
 
     const grant = await prisma.discoveredGrant.update({
       where: { id },
       data: {
         status,
         reviewNotes,
+        sourceUrl,
+        verificationStatus: status === 'approved' ? 'verified' : status === 'rejected' || status === 'duplicate' ? 'rejected' : 'unverified',
         reviewedBy: session.id,
         reviewedAt: new Date(),
       },

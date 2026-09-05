@@ -3,12 +3,14 @@
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
 import { ScoreGauge } from '@/components/ui/Progress';
 import type { PolicyInterpretation } from '@/lib/schemas';
+import { fundingTierLabel, normalizeFundingTier } from '@/lib/funding-tiers';
 
 interface PolicyResultsProps {
   policy: PolicyInterpretation;
 }
 
 export function PolicyResults({ policy }: PolicyResultsProps) {
+  const fundingTier = normalizeFundingTier(policy.debt_sensitivity_tier);
   return (
     <Card>
       <CardHeader>
@@ -16,12 +18,9 @@ export function PolicyResults({ policy }: PolicyResultsProps) {
           <h2 className="text-xl font-semibold text-gray-900">M300 Policy Alignment</h2>
           <span className={`
             inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
-            ${policy.debt_sensitivity_tier === 'tier_1' ? 'bg-emerald-100 text-emerald-800' : ''}
-            ${policy.debt_sensitivity_tier === 'tier_2' ? 'bg-yellow-100 text-yellow-800' : ''}
-            ${policy.debt_sensitivity_tier === 'tier_3' ? 'bg-orange-100 text-orange-800' : ''}
-            ${policy.debt_sensitivity_tier === 'tier_4' ? 'bg-red-100 text-red-800' : ''}
+            ${fundingTier === 'tier_1' ? 'bg-emerald-100 text-emerald-800' : 'bg-yellow-100 text-yellow-800'}
           `}>
-            {policy.debt_sensitivity_tier?.replace('_', ' ').toUpperCase()}
+            {fundingTierLabel(fundingTier)}
           </span>
         </div>
       </CardHeader>

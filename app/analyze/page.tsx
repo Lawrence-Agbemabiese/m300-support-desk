@@ -13,6 +13,7 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { TradeOffExplorer } from '@/components/TradeOffExplorer';
 import { useAuth } from '@/lib/auth-context';
 import type { AnalysisResult, ProjectIntake } from '@/lib/schemas';
+import { fundingTierName } from '@/lib/funding-tiers';
 
 type ViewTab = 'policy' | 'tradeoffs' | 'grants' | 'proposal' | 'checklist';
 
@@ -131,14 +132,14 @@ export default function AnalyzePage() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{result.project.project_name}</h1>
           <p className="text-gray-600">
-            {result.project.country} - {result.project.technology_type.replace(/_/g, ' ')}
+            {result.project.country} - {result.project.technology_type === 'other' && result.project.technology_other ? result.project.technology_other : result.project.technology_type.replace(/_/g, ' ')}
           </p>
         </div>
-        <div className="flex items-center space-x-4">
+        <div className="flex flex-wrap items-center gap-4">
           {result.metadata.enhanced && (
             <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800">
               AI-Enhanced ({result.metadata.model?.split('-').slice(1, 3).join(' ')})
@@ -155,21 +156,18 @@ export default function AnalyzePage() {
       </div>
 
       {/* Summary Bar */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 gap-4 mb-6 sm:grid-cols-2 lg:grid-cols-4">
         <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
           <div className="text-3xl font-bold text-gray-900">{result.policy.m300_alignment_score}</div>
           <div className="text-sm text-gray-500">M300 Score</div>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
           <div className={`text-3xl font-bold ${
-            result.policy.debt_sensitivity_tier === 'tier_1' ? 'text-emerald-600' :
-            result.policy.debt_sensitivity_tier === 'tier_2' ? 'text-yellow-600' :
-            result.policy.debt_sensitivity_tier === 'tier_3' ? 'text-orange-600' :
-            'text-red-600'
+            result.policy.debt_sensitivity_tier === 'tier_1' ? 'text-emerald-600' : 'text-yellow-600'
           }`}>
-            {result.policy.debt_sensitivity_tier?.replace('_', ' ').toUpperCase()}
+            {fundingTierName(result.policy.debt_sensitivity_tier)}
           </div>
-          <div className="text-sm text-gray-500">Debt Tier</div>
+          <div className="text-sm text-gray-500">Funding Tier</div>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
           <div className="text-3xl font-bold text-gray-900">
@@ -187,7 +185,7 @@ export default function AnalyzePage() {
 
       {/* Tabs */}
       <div className="border-b border-gray-200 mb-6">
-        <nav className="-mb-px flex space-x-8">
+        <nav className="-mb-px flex space-x-8 overflow-x-auto">
           {tabs.map((tab) => (
             <button
               key={tab.id}

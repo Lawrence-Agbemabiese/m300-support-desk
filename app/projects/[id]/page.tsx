@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
 import { useAuth } from '@/lib/auth-context';
 import type { AnalysisResult } from '@/lib/schemas';
+import { fundingTierName } from '@/lib/funding-tiers';
 
 interface ProjectDetail {
   id: string;
@@ -18,6 +19,9 @@ interface ProjectDetail {
   updatedAt: string;
   status: string;
   advisorNotes: string | null;
+  canReanalyse: boolean;
+  currentRevision: number;
+  revisions: Array<{ id: string; createdAt: string; revisionNumber: number; source: string; enhanced: boolean; model: string | null; processingTimeMs: number | null; createdByAdvisor: { id: string; name: string } | null; }>;
   advisor: {
     id: string;
     name: string;
@@ -28,6 +32,7 @@ interface ProjectDetail {
     projectName: string;
     country: string;
     technologyType: string;
+    technologyOther: string | null;
     estimatedCostUsd: number;
     m300Score: number | null;
     debtTier: string | null;
@@ -185,7 +190,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Header */}
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-6">
         <div>
           <Link
             href="/projects"
@@ -203,7 +208,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
           </Link>
           <h1 className="text-2xl font-bold text-gray-900">{project.summary.projectName}</h1>
           <p className="text-gray-600">
-            {project.summary.country} - {project.summary.technologyType.replace(/_/g, ' ')}
+            {project.summary.country} - {project.summary.technologyType === 'other' && project.summary.technologyOther ? project.summary.technologyOther : project.summary.technologyType.replace(/_/g, ' ')}
           </p>
           <p className="text-sm text-gray-500 mt-1">
             Submitted: {formatDate(project.createdAt)}
@@ -214,8 +219,10 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
               </span>
             )}
           </p>
+          <p className="mt-1 text-sm font-medium text-emerald-700">Current revision: {project.currentRevision}</p>
         </div>
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {project.canReanalyse && <Link href={`/projects/${id}/edit`}><Button>Revise & Reanalyse</Button></Link>}
           {result && <PDFDownloadButton result={result} />}
           {canEditStatus ? (
             <select
@@ -284,10 +291,14 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
         </CardContent>
       </Card>
 
+      <Card className="mb-6"><CardHeader><h3 className="font-semibold text-gray-900">Revision History</h3></CardHeader><CardContent><div className="space-y-3">
+        {project.revisions.map((revision) => <div key={revision.id} className="flex flex-col gap-1 border-b border-gray-100 pb-3 last:border-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between"><div><span className="font-medium text-gray-900">Revision {revision.revisionNumber}</span><span className="ml-2 text-xs uppercase tracking-wide text-gray-500">{revision.source.replace(/_/g, ' ')}</span></div><div className="text-sm text-gray-500">{formatDate(revision.createdAt)}{revision.createdByAdvisor && ` by ${revision.createdByAdvisor.name}`}{revision.enhanced && ' · AI-enhanced'}</div></div>)}
+      </div></CardContent></Card>
+
       {result ? (
         <>
           {/* Summary Bar */}
-          <div className="grid grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 gap-4 mb-6 sm:grid-cols-2 lg:grid-cols-4">
             <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
               <div className="text-3xl font-bold text-gray-900">
                 {result.policy.m300_alignment_score}
@@ -301,14 +312,12 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                     ? 'text-emerald-600'
                     : result.policy.debt_sensitivity_tier === 'tier_2'
                     ? 'text-yellow-600'
-                    : result.policy.debt_sensitivity_tier === 'tier_3'
-                    ? 'text-orange-600'
-                    : 'text-red-600'
+                    : 'text-yellow-600'
                 }`}
               >
-                {result.policy.debt_sensitivity_tier?.replace('_', ' ').toUpperCase()}
+                {fundingTierName(result.policy.debt_sensitivity_tier)}
               </div>
-              <div className="text-sm text-gray-500">Debt Tier</div>
+              <div className="text-sm text-gray-500">Funding Tier</div>
             </div>
             <div className="bg-white rounded-lg border border-gray-200 p-4 text-center">
               <div className="text-3xl font-bold text-gray-900">
@@ -327,7 +336,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
 
           {/* Tabs */}
           <div className="border-b border-gray-200 mb-6">
-            <nav className="-mb-px flex space-x-8">
+            <nav className="-mb-px flex space-x-8 overflow-x-auto">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}

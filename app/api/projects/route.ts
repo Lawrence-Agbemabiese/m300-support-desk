@@ -2,11 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { isAdmin, requireAuth } from '@/lib/access-control';
 import { z } from 'zod';
+import type { Prisma } from '@prisma/client';
 
 const statusValues = ['submitted', 'in_review', 'approved', 'needs_info', 'archived'] as const;
 const ProjectsQuerySchema = z.object({
   status: z.enum(statusValues).optional(),
   country: z.string().trim().min(2).max(120).optional(),
+  q: z.string().trim().min(1).max(200).optional(),
   myProjects: z.boolean().optional(),
   limit: z.preprocess(
     (value) => (value === undefined ? 50 : Number(value)),
@@ -30,6 +32,7 @@ export async function GET(request: NextRequest) {
     const parsed = ProjectsQuerySchema.safeParse({
       status: searchParams.get('status') || undefined,
       country: searchParams.get('country') || undefined,
+      q: searchParams.get('q') || undefined,
       myProjects: searchParams.get('my_projects') === 'true',
       limit: searchParams.get('limit') ?? undefined,
       offset: searchParams.get('offset') ?? undefined,
@@ -40,9 +43,9 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
-    const { status, country, myProjects, limit, offset } = parsed.data;
+    const { status, country, q, myProjects, limit, offset } = parsed.data;
 
-    const where: Record<string, unknown> = {};
+    const where: Prisma.ProjectWhereInput = {};
     if (status) where.status = status;
     if (country) where.country = country;
     if (sessionIsAdmin && myProjects) {
@@ -50,6 +53,12 @@ export async function GET(request: NextRequest) {
     } else if (!sessionIsAdmin) {
       where.advisorId = session.id;
     }
+    if (q) where.OR = [
+      { projectName: { contains: q, mode: 'insensitive' } }, { country: { contains: q, mode: 'insensitive' } },
+      { locationDescription: { contains: q, mode: 'insensitive' } }, { technologyType: { contains: q, mode: 'insensitive' } },
+      { technologyOther: { contains: q, mode: 'insensitive' } }, { ownershipModel: { contains: q, mode: 'insensitive' } },
+      { ownershipOther: { contains: q, mode: 'insensitive' } }, { targetBeneficiaries: { contains: q, mode: 'insensitive' } },
+    ];
 
     const [projects, total] = await Promise.all([
       prisma.project.findMany({
@@ -64,6 +73,7 @@ export async function GET(request: NextRequest) {
           projectName: true,
           country: true,
           technologyType: true,
+          technologyOther: true,
           estimatedCostUsd: true,
           ownershipModel: true,
           projectStage: true,

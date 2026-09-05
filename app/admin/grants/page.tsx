@@ -18,8 +18,10 @@ interface DiscoveredGrant {
   ticketSizeMax: number | null;
   description: string;
   website: string | null;
+  sourceUrl: string | null;
   searchQuery: string | null;
   confidence: number | null;
+  verificationStatus: string;
   status: string;
   reviewNotes: string | null;
 }
@@ -66,6 +68,7 @@ export default function AdminGrantsPage() {
   // Review modal
   const [reviewingGrant, setReviewingGrant] = useState<DiscoveredGrant | null>(null);
   const [reviewNotes, setReviewNotes] = useState('');
+  const [verifiedSourceUrl, setVerifiedSourceUrl] = useState('');
   const [saving, setSaving] = useState(false);
 
   const fetchGrants = useCallback(async () => {
@@ -136,13 +139,14 @@ export default function AdminGrantsPage() {
       const response = await fetch(`/api/grants/discovered/${grantId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status, reviewNotes }),
+        body: JSON.stringify({ status, reviewNotes, sourceUrl: verifiedSourceUrl || undefined }),
       });
 
       if (!response.ok) throw new Error('Failed to update');
 
       setReviewingGrant(null);
       setReviewNotes('');
+      setVerifiedSourceUrl('');
       fetchGrants();
     } catch (err) {
       alert('Failed to update grant status');
@@ -210,14 +214,14 @@ export default function AdminGrantsPage() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Grant Discovery</h1>
         <p className="text-gray-600">
-          Search for new grant opportunities and review discovered funders
+          Generate candidate leads and verify each one against an official source
         </p>
       </div>
 
       {/* Search Section */}
       <Card className="mb-8">
         <CardHeader>
-          <h2 className="text-lg font-semibold">Search for New Grants</h2>
+          <h2 className="text-lg font-semibold">Generate Candidate Grant Leads</h2>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -238,10 +242,10 @@ export default function AdminGrantsPage() {
           </div>
           <div className="mt-4 flex items-center justify-between">
             <p className="text-sm text-gray-500">
-              AI will search for grant programs not already in our database
+              AI suggestions are unverified leads, not confirmed open opportunities.
             </p>
             <Button onClick={runSearch} loading={searching} disabled={!searchQuery.trim()}>
-              {searching ? 'Searching...' : 'Search for Grants'}
+              {searching ? 'Generating...' : 'Generate Leads'}
             </Button>
           </div>
         </CardContent>
@@ -347,9 +351,10 @@ export default function AdminGrantsPage() {
                         </span>
                         {grant.confidence && (
                           <span className="text-xs text-gray-500">
-                            {Math.round(grant.confidence * 100)}% confidence
+                            {Math.round(grant.confidence * 100)}% AI plausibility
                           </span>
                         )}
+                        <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${grant.verificationStatus === 'verified' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>{grant.verificationStatus === 'verified' ? 'Human verified' : 'Unverified AI lead'}</span>
                       </div>
                       <p className="text-sm text-gray-600 mt-1">{grant.description}</p>
                       <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
@@ -371,6 +376,7 @@ export default function AdminGrantsPage() {
                             | Website
                           </a>
                         )}
+                        {grant.sourceUrl && <a href={grant.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:underline">| Candidate source</a>}
                       </div>
                     </div>
                     {grant.status === 'pending' && (
@@ -381,6 +387,7 @@ export default function AdminGrantsPage() {
                           onClick={() => {
                             setReviewingGrant(grant);
                             setReviewNotes('');
+                            setVerifiedSourceUrl(grant.sourceUrl || '');
                           }}
                         >
                           Review
@@ -404,11 +411,13 @@ export default function AdminGrantsPage() {
               <p className="font-medium">{reviewingGrant.funderName}</p>
               <p className="text-sm text-gray-600 mt-1">{reviewingGrant.description}</p>
             </div>
+            <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">Verify current status, eligibility, dates, and terms on the official program page before approval.</div>
+            <Input label="Official source URL" type="url" value={verifiedSourceUrl} onChange={(event) => setVerifiedSourceUrl(event.target.value)} placeholder="https://official-funder.example/program" helperText="Required for approval" />
             <Textarea
-              label="Review Notes (optional)"
+              label="Verification Notes"
               value={reviewNotes}
               onChange={(e) => setReviewNotes(e.target.value)}
-              placeholder="Add notes about this grant..."
+              placeholder="Record the status, deadline checked, eligibility, and any caveats..."
               rows={3}
             />
             <div className="flex justify-end space-x-3 mt-4">
@@ -423,6 +432,7 @@ export default function AdminGrantsPage() {
                 variant="outline"
                 onClick={() => updateGrantStatus(reviewingGrant.id, 'rejected')}
                 loading={saving}
+                disabled={!verifiedSourceUrl || reviewNotes.trim().length < 10}
                 className="text-red-600 border-red-300 hover:bg-red-50"
               >
                 Reject

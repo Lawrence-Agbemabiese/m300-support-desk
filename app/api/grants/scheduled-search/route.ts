@@ -5,7 +5,7 @@ import { grants } from '@/lib/data/grants';
 
 // Predefined search queries for scheduled runs
 const SCHEDULED_SEARCHES = [
-  { query: 'new renewable energy grant programs Africa 2024 2025', region: 'All Africa' },
+  { query: 'renewable energy grant programs Africa 2026 2027', region: 'All Africa' },
   { query: 'climate finance grants sub-saharan africa energy access', region: 'Sub-Saharan Africa' },
   { query: 'mini-grid funding opportunities West Africa Ghana Nigeria', region: 'West Africa' },
   { query: 'clean cooking grants Africa donor funding', region: 'All Africa' },
@@ -15,7 +15,7 @@ const SCHEDULED_SEARCHES = [
   { query: 'health facility electrification grants Africa', region: 'All Africa' },
 ];
 
-const DISCOVERY_PROMPT = `You are a grant funding research assistant specializing in African energy access programs. Your task is to identify NEW grant funding opportunities that are NOT already in our database.
+const DISCOVERY_PROMPT = `You are generating candidate grant leads for a human research workflow. You do not have live web access, so never claim that a program is verified, open, or current. Identify possible opportunities that are NOT already in our database.
 
 EXISTING FUNDERS IN DATABASE (do NOT include these):
 {existing_funders}
@@ -26,7 +26,7 @@ REGION FOCUS: {region}
 Please search your knowledge for grant programs, funds, and donor initiatives that:
 1. Provide GRANTS (not loans) or grant components for energy projects in Africa
 2. Support renewable energy, mini-grids, solar, clean cooking, or energy access
-3. Are currently active or have regular funding cycles
+3. May be active or have regular funding cycles, subject to human verification
 4. Accept applications from NGOs, community organizations, cooperatives, or governments
 
 For each NEW grant opportunity you find, provide:
@@ -38,12 +38,13 @@ For each NEW grant opportunity you find, provide:
 6. Typical Grant Size Range (USD)
 7. Brief Description (2-3 sentences)
 8. Website (if known)
-9. Your confidence level (high/medium/low) that this is accurate and currently active
+9. Your confidence level (high/medium/low) that the candidate identity is plausible; this is not evidence of current availability
+10. Official source URL for the specific program (if known)
 
 Return your findings as a JSON array. If you cannot find any NEW grants, return an empty array.
 
 IMPORTANT:
-- Only include grants you are confident about
+- Every result is an UNVERIFIED LEAD until a human checks the official source
 - Do not make up or hallucinate funders
 - Focus on {region} region grants
 - Exclude any funders already in our database`;
@@ -53,14 +54,11 @@ IMPORTANT:
 export async function POST(request: NextRequest) {
   try {
     // Verify secret key for scheduled calls
-    // Supports both Bearer token (manual calls) and Vercel Cron header
+    // Vercel Cron and manual callers both use the configured Bearer token.
     const authHeader = request.headers.get('authorization');
-    const vercelCronHeader = request.headers.get('x-vercel-cron');
     const cronSecret = process.env.CRON_SECRET;
 
-    // Allow Vercel Cron (automatically authenticated by Vercel)
-    const isVercelCron = vercelCronHeader === '1';
-    if (!isVercelCron && (!cronSecret || cronSecret.trim().length < 20)) {
+    if (!cronSecret || cronSecret.trim().length < 20) {
       return NextResponse.json(
         { error: 'CRON_SECRET is not configured securely' },
         { status: 500 }
@@ -69,7 +67,7 @@ export async function POST(request: NextRequest) {
 
     const isValidBearerToken = authHeader === `Bearer ${cronSecret}`;
 
-    if (!isVercelCron && !isValidBearerToken) {
+    if (!isValidBearerToken) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -125,6 +123,7 @@ export async function POST(request: NextRequest) {
       grantSizeMax?: number;
       description: string;
       website?: string;
+      sourceUrl?: string;
       confidence?: string;
     }> = [];
 
@@ -159,10 +158,12 @@ export async function POST(request: NextRequest) {
             ticketSizeMax: grant.grantSizeMax,
             description: grant.description,
             website: grant.website,
+            sourceUrl: grant.sourceUrl,
             discoveredBy: 'scheduled',
             searchQuery: searchConfig.query,
             confidence: grant.confidence === 'high' ? 0.9 : grant.confidence === 'medium' ? 0.7 : 0.5,
             status: 'pending',
+            verificationStatus: 'unverified',
           },
         });
       })

@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 import { rejectIfCrossOrigin } from '@/lib/request-security';
 
-const DISCOVERY_PROMPT = `You are a grant funding research assistant specializing in African energy access programs. Your task is to identify NEW grant funding opportunities that are NOT already in our database.
+const DISCOVERY_PROMPT = `You are generating candidate grant leads for a human research workflow. You do not have live web access, so never claim that a program is verified, open, or current. Identify possible opportunities that are NOT already in our database and label every result as requiring source verification.
 
 EXISTING FUNDERS IN DATABASE (do NOT include these):
 {existing_funders}
@@ -18,7 +18,7 @@ REGION FOCUS: {region}
 Please search your knowledge for grant programs, funds, and donor initiatives that:
 1. Provide GRANTS (not loans) or grant components for energy projects in Africa
 2. Support renewable energy, mini-grids, solar, clean cooking, or energy access
-3. Are currently active or have regular funding cycles
+3. May be active or have regular funding cycles, subject to human verification
 4. Accept applications from NGOs, community organizations, cooperatives, or governments
 
 For each NEW grant opportunity you find, provide:
@@ -30,7 +30,8 @@ For each NEW grant opportunity you find, provide:
 6. Typical Grant Size Range (USD)
 7. Brief Description (2-3 sentences)
 8. Website (if known)
-9. Your confidence level (high/medium/low) that this is accurate and currently active
+9. Official source URL for the specific program (if known)
+10. Your confidence level (high/medium/low) that the candidate identity is plausible; this is not evidence of current availability
 
 Return your findings as a JSON array with these EXACT field names:
 - "funderName": string (required)
@@ -42,12 +43,13 @@ Return your findings as a JSON array with these EXACT field names:
 - "grantSizeMax": number (optional, in USD)
 - "description": string (required)
 - "website": string (optional)
+- "sourceUrl": string (optional; official program page, not a search-results page)
 - "confidence": "high" | "medium" | "low"
 
 If you cannot find any NEW grants, return an empty array [].
 
 IMPORTANT:
-- Only include grants you are confident about
+- Every result is an UNVERIFIED LEAD until a human checks the official source
 - Do not make up or hallucinate funders
 - Focus on {region} region grants
 - Exclude any funders already in our database`;
@@ -147,6 +149,7 @@ export async function POST(request: NextRequest) {
       grantSizeMax?: number;
       description: string;
       website?: string;
+      sourceUrl?: string;
       confidence?: string;
     }> = [];
 
@@ -166,6 +169,7 @@ export async function POST(request: NextRequest) {
           grantSizeMax: g.grantSizeMax || g.grant_size_max || g.maxAmount || g.max_amount,
           description: g.description || g.desc || g.summary || 'No description provided',
           website: g.website || g.url || g.link,
+          sourceUrl: g.sourceUrl || g.source_url || g.officialSource,
           confidence: g.confidence || g.confidenceLevel || 'low',
         }));
       }
@@ -200,10 +204,12 @@ export async function POST(request: NextRequest) {
             ticketSizeMax: grant.grantSizeMax,
             description: grant.description,
             website: grant.website,
+            sourceUrl: grant.sourceUrl,
             discoveredBy: 'auto_search',
             searchQuery: query,
             confidence: grant.confidence === 'high' ? 0.9 : grant.confidence === 'medium' ? 0.7 : 0.5,
             status: 'pending',
+            verificationStatus: 'unverified',
           },
         });
       })
@@ -226,6 +232,7 @@ export async function POST(request: NextRequest) {
       region: region || 'All Africa',
       discoveredCount: newGrants.length,
       grants: newGrants,
+      verificationNotice: 'These are unverified AI-generated leads. Confirm each opportunity against an official source before use.',
     });
   } catch (error) {
     console.error('Grant discovery error:', error);

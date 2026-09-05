@@ -1,19 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ProjectIntakeSchema, type AnalysisResult } from '@/lib/schemas';
-import { interpretPolicy } from '@/lib/agents/policy-interpreter';
-import { matchGrants } from '@/lib/agents/grant-matcher';
-import { coachProposal } from '@/lib/agents/proposal-coach';
-import { exploreTradeOffs } from '@/lib/agents/policy-tradeoff';
-import { enhanceNarrative, isConfigured } from '@/lib/llm/client';
-import { M300_SYSTEM_PROMPT, getPolicyEnhancementPrompt } from '@/lib/llm/prompts';
+import { ProjectIntakeSchema } from '@/lib/schemas';
+import { isConfigured } from '@/lib/llm/client';
 import { prisma } from '@/lib/db';
 import { requireAuth } from '@/lib/access-control';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 import { rejectIfCrossOrigin } from '@/lib/request-security';
+import { analyzeProject } from '@/lib/project-analysis';
+import { analysisToProjectData, analysisToRevisionData, intakeToProjectData } from '@/lib/project-record';
 
 export async function POST(request: NextRequest) {
-  const startTime = Date.now();
-
   try {
     const originError = rejectIfCrossOrigin(request);
     if (originError) return originError;
@@ -61,93 +56,16 @@ export async function POST(request: NextRequest) {
 
     const project = parseResult.data;
 
-    // Check for enhanced mode
     const enhance = request.nextUrl.searchParams.get('enhance') === 'true';
-    const useEnhancedMode = request.nextUrl.searchParams.get('enhanced_mode') === 'true';
-
-    // Step 1: Policy Interpretation
-    let policy = interpretPolicy(project);
-
-    // Step 1b: Policy Trade-Off Explorer (deterministic, no LLM)
-    const tradeoffs = exploreTradeOffs(project, policy);
-
-    // Step 2: Grant Matching
-    const grants = matchGrants(project);
-
-    // Step 3: Proposal Coaching
-    const coach = coachProposal(project, policy, grants);
-
-    // Optional: Enhance with Claude API
-    let modelUsed: string | undefined;
-    if (enhance && isConfigured()) {
-      try {
-        const enhancedNarrative = await enhanceNarrative(
-          M300_SYSTEM_PROMPT,
-          getPolicyEnhancementPrompt(project, policy),
-          { useEnhancedMode, maxTokens: 1024 }
-        );
-
-        // Update policy with enhanced narrative
-        policy = {
-          ...policy,
-          alignment_narrative: enhancedNarrative,
-        };
-
-        modelUsed = useEnhancedMode ? 'claude-opus-4-20250514' : 'claude-sonnet-4-20250514';
-      } catch (llmError) {
-        console.error('LLM enhancement failed, using base analysis:', llmError);
-        // Continue with base analysis
-      }
-    }
-
-    const processingTime = Date.now() - startTime;
-
-    // Save to database
-    const savedProject = await prisma.project.create({
-      // Cast to any to remain compatible until Prisma client is regenerated with new column
-      data: {
-        projectName: project.project_name,
-        country: project.country,
-        locationDescription: project.location_description,
-        technologyType: project.technology_type,
-        capacityKw: project.capacity_kw,
-        targetBeneficiaries: project.target_beneficiaries,
-        ownershipModel: project.ownership_model,
-        productiveUses: JSON.stringify(project.productive_uses),
-        estimatedCostUsd: project.estimated_cost_usd,
-        existingFunding: project.existing_funding,
-        projectStage: project.project_stage,
-        communityEngagement: project.community_engagement,
-        additionalContext: project.additional_context,
-        debtPreference: project.debt_preference,
-        policyResult: JSON.stringify(policy),
-        grantsResult: JSON.stringify(grants),
-        coachResult: JSON.stringify(coach),
-        tradeoffsResult: JSON.stringify(tradeoffs),
-        m300Score: policy.m300_alignment_score,
-        debtTier: policy.debt_sensitivity_tier,
-        topFunder: grants.matches[0]?.funder_name,
-        topFunderScore: grants.matches[0]?.fit_score,
-        enhanced: Boolean(modelUsed),
-        processingTimeMs: processingTime,
-        advisorId: session.id,
-      } as any,
+    const enhancedMode = request.nextUrl.searchParams.get('enhanced_mode') === 'true';
+    const analysis = await analyzeProject(project, { enhance, enhancedMode });
+    const savedProject = await prisma.$transaction(async (transaction) => {
+      const created = await transaction.project.create({ data: { ...intakeToProjectData(project), ...analysisToProjectData(analysis), advisorId: session.id, currentRevision: 1 } });
+      await transaction.projectRevision.create({ data: { ...analysisToRevisionData(analysis, 1, 'initial', session.id), projectId: created.id } });
+      return created;
     });
 
-    const result: AnalysisResult = {
-      project,
-      policy,
-      grants,
-      coach,
-      tradeoffs,
-      metadata: {
-        enhanced: Boolean(modelUsed),
-        model: modelUsed,
-        timestamp: new Date().toISOString(),
-        processing_time_ms: processingTime,
-        project_id: savedProject.id,
-      },
-    };
+    const result = { ...analysis, metadata: { ...analysis.metadata, project_id: savedProject.id, revision: 1 } };
 
     return NextResponse.json(result);
   } catch (error) {
