@@ -1,234 +1,141 @@
 # Decision Framework
 
-## Overview
+## Purpose
 
-This document defines the explicit decision rules and scoring logic used by the Grant Matcher agent. All weights and thresholds are transparent and adjustable.
+The Grant Matcher ranks potential funding sources for an M300 project. It is a decision-support tool, not an eligibility determination. Every funder opportunity and financing term must be checked against a current official source before action.
 
-## Scoring Components
+## Final score
 
-The fit score (0-100) is computed from five weighted components:
+The base fit score (0–100) combines five components:
 
-| Component | Weight | Description |
-|-----------|--------|-------------|
-| Geography Match | 25% | Does funder cover this country/region? |
-| Thematic Match | 30% | Does funder support this technology/use case? |
-| Size Match | 15% | Does project cost fit funder's typical range? |
-| Ownership Match | 20% | Does ownership model align with funder preferences? |
-| Eligibility Match | 10% | Does project meet stated eligibility criteria? |
+| Component | Weight | What it measures |
+|---|---:|---|
+| Geography | 25% | Country and regional fit |
+| Thematic | 30% | Technology, use case, and sector fit |
+| Size | 15% | Project cost relative to the typical ticket |
+| Ownership | 20% | Fit with the funder's stated ownership preferences |
+| Eligibility | 10% | Apparent readiness against typical requirements |
 
-**Total: 100%**
+The calculation is:
 
-### Red Flag Penalty
+`final score = base score × (1 − red-flag penalty) × debt modifier`
 
-A penalty factor (0-50%) is applied when red flags are identified:
-- Minor red flag: 10% penalty
-- Moderate red flag: 25% penalty
-- Major red flag: 50% penalty (effectively disqualifying)
+Red flags reduce the score by 10% each, capped at 30%. They remain visible in the result so a user can distinguish a weak fit from a promising option with manageable risks.
 
-**Final Score = Base Score × (1 - Red Flag Penalty)**
+## Two-tier debt model
 
----
+The M300 interface uses two debt-sensitivity tiers:
 
-## Component Scoring Rules
+| Tier | Meaning | Score modifier | Matching treatment |
+|---|---|---:|---|
+| Tier 1 | Low/no-debt option preferred | 1.00 | Preferred where fit is otherwise comparable |
+| Tier 2 | Some debt or debt-like exposure accepted | 0.90 | Retained and ranked with explicit risk warnings |
 
-### 1. Geography Match (25%)
+Tier 2 is not an automatic exclusion. A Tier 2 source may still be the strongest practical match when its geography, thematic fit, size, and terms are favorable.
+
+Historical funder records may contain numeric tiers 1–4. The matcher normalizes `1` to Tier 1 and every value greater than `1` to Tier 2. This preserves older data while keeping the user-facing model clear.
+
+### Project tier
+
+The Policy Interpreter derives the project's tier only from `debt_preference`:
+
+| Debt preference | Project tier |
+|---|---|
+| `grant_only` | Tier 1 |
+| `grant_preferred` | Tier 1 |
+| `open_to_blended` | Tier 2 |
+| `any_instrument` | Tier 2 |
+
+Ownership never determines the debt tier. Ownership remains a separate governance and funder-fit signal because a public, community, or private structure can each use either debt or non-debt finance.
+
+## Component rules
+
+### Geography (25%)
 
 | Condition | Score |
-|-----------|-------|
-| Country explicitly listed as priority | 100 |
-| Country within listed region | 80 |
-| "Africa-wide" or "Global South" eligible | 60 |
-| Region adjacent to focus area | 30 |
-| Not covered | 0 |
+|---|---:|
+| Country listed as a priority | 100 |
+| African regional scope applies | 60 |
+| Global South scope applies | 50 |
+| Coverage not established | 0 |
 
-**Example**: Project in Nigeria
-- Funder lists "Nigeria" → 100
-- Funder lists "West Africa" → 80
-- Funder lists "Sub-Saharan Africa" → 60
-- Funder lists "East Africa only" → 0
+### Thematic fit (30%)
 
-### 2. Thematic Match (30%)
+| Condition | Score |
+|---|---:|
+| Primary-focus match | 100 |
+| Secondary-focus or productive-use match | 80 |
+| General energy-access match | 60 |
+| Weak or uncertain match | 30 |
 
-Scoring based on overlap between project characteristics and funder focus areas:
+If `technology_type` is `other`, scoring and explanations use `technology_other` when supplied.
 
-| Overlap Level | Score |
-|---------------|-------|
-| Primary focus match (e.g., "mini-grids" for mini-grid project) | 100 |
-| Secondary focus match (e.g., "rural electrification" for mini-grid) | 80 |
-| Adjacent focus (e.g., "renewable energy" for mini-grid) | 50 |
-| Tangential (e.g., "climate adaptation" when mini-grid is resilience tool) | 30 |
-| No thematic connection | 0 |
+### Size (15%)
 
-**Thematic Tags Evaluated**:
-- Technology type (solar, mini-grid, SHS, grid extension)
-- Use case (last-mile, productive use, public institutions, residential)
-- Sector (energy access, climate, agriculture, health)
-- Cross-cutting (gender, youth, jobs)
+| Condition | Score |
+|---|---:|
+| Within the stated typical range | 100 |
+| Within 50% beyond a range boundary | 60 |
+| Further outside the range | 30 |
 
-### 3. Size Match (15%)
+### Ownership (20%)
 
-Based on how project cost fits within funder's typical ticket size:
+Ownership is scored against stated funder preferences, not used as a proxy for debt. Community and public models often fit grant criteria strongly, while private models can still match where funder terms support them. If `ownership_model` is `other`, displays use `ownership_other` when supplied.
 
-| Fit | Score |
-|-----|-------|
-| Project cost within typical range | 100 |
-| Within 50% of range boundaries | 70 |
-| Within 100% of range boundaries | 40 |
-| Far outside range | 10 |
+### Eligibility (10%)
 
-**Example**: Funder typical range $200K-$500K
-- Project cost $350K → 100
-- Project cost $150K or $600K → 70
-- Project cost $100K or $750K → 40
-- Project cost $50K or $2M → 10
+| Evidence available | Score |
+|---|---:|
+| Entity/readiness and engagement both indicated | 70 |
+| One indicated | 50 |
+| Neither indicated | 30 |
 
-### 4. Ownership Match (20%)
+These scores are intentionally provisional; the user must verify actual eligibility.
 
-Critical component reflecting debt-sensitivity and community ownership principles:
+## Risk signals
 
-| Project Ownership Model | Funder Preference | Score |
-|-------------------------|-------------------|-------|
-| Community cooperative | Prefers community | 100 |
-| Community cooperative | Neutral | 80 |
-| Community cooperative | Prefers private | 40 |
-| Public/municipal | Prefers public | 100 |
-| Public/municipal | Neutral | 70 |
-| Public-community hybrid | Any community-friendly | 90 |
-| Private with benefit-sharing | Prefers private | 80 |
-| Private with benefit-sharing | Neutral | 50 |
-| Private IPP | Prefers private | 70 |
-| Private IPP | Prefers community/public | 10 |
+The matcher retains detailed warnings even when an opportunity remains ranked. Current signals include:
 
-**Debt Sensitivity Modifier**:
-If funder instrument is a loan or requires sovereign guarantee:
-- Community ownership project: -30 points (penalize mismatch)
-- Private ownership project: no modifier
+- results-based payments that may require bridge financing;
+- blended instruments that conflict with a grant-only preference;
+- project size well outside a funder's typical range;
+- private-IPP terms that may require guarantees; and
+- unknown repayment, currency, guarantee, or contingent-liability terms.
 
-### 5. Eligibility Match (10%)
+Warnings are prompts for due diligence, not assertions that a financing source is unsuitable.
 
-Based on meeting stated eligibility criteria:
+## Ranking and exclusion
 
-| Criteria Met | Score |
-|--------------|-------|
-| All key criteria clearly met | 100 |
-| Most criteria met, 1-2 uncertain | 70 |
-| Some criteria met, significant gaps | 40 |
-| Key criteria not met | 0 |
+1. Score every known funder.
+2. Apply the red-flag penalty and debt modifier.
+3. Sort by final score descending.
+4. Return up to five matches at or above the score threshold of 30.
+5. Show up to three below-threshold sources with the numerical reason.
 
-**Common Eligibility Factors**:
-- Registered entity status
-- Minimum track record
-- Geographic presence requirements
-- Co-financing requirements
-- Specific sector experience
+No source is excluded solely because it is Tier 2 or because the project selected `open_to_blended` or `any_instrument`. Explicit eligibility failures may be added later when backed by verified current terms.
 
----
+## Worked example
 
-## Red Flag Identification
+A project receives these component scores: geography 100, thematic 100, size 100, ownership 90, eligibility 70. Its base score is:
 
-### Major Red Flags (50% penalty - near disqualification)
+`100×0.25 + 100×0.30 + 100×0.15 + 90×0.20 + 70×0.10 = 95`
 
-1. **Instrument Mismatch**: Project seeks grants only, but funder offers only loans
-2. **Sovereign Debt Risk**: Funder requires government guarantee for community project
-3. **Geography Exclusion**: Country explicitly excluded from funder's scope
-4. **Ownership Conflict**: Funder requires private developer for community-owned project
+With one red flag and a Tier 2 funder:
 
-### Moderate Red Flags (25% penalty)
+`95 × 0.90 × 0.90 = 76.95`, rounded to `77`.
 
-1. **Partial Geography Fit**: Country not explicitly listed but might be considered
-2. **Size Stretch**: Project cost significantly outside typical range
-3. **Missing Eligibility**: One key criterion unclear or possibly unmet
-4. **Timing Mismatch**: Funder's current call may not align with project timeline
+The source remains a match and its warning remains visible.
 
-### Minor Red Flags (10% penalty)
+## Configuration
 
-1. **Documentation Gaps**: Some required documents not yet available
-2. **Governance Questions**: Ownership structure needs clarification
-3. **Technical Uncertainty**: Technology choice not in funder's common portfolio
-4. **Capacity Concerns**: Implementing entity may need additional support
+Weights, modifiers, penalties, and the minimum threshold are defined in `lib/data/weights.ts`. Changes require a version increment and regression checks so saved analyses can identify the scoring version used.
 
----
+## Transparency requirements
 
-## Worked Example
+Every result must show:
 
-**Project**: 50kW solar mini-grid, community cooperative ownership, Nigeria, $300K cost
-
-**Funder**: GEAPP Mini-Grid Fund
-- Geography: Nigeria priority country
-- Thematic: Mini-grids with productive use
-- Typical size: $150K-$500K
-- Ownership: Explicitly supports community models
-- Eligibility: Registered entity, demand assessment, technical design
-
-**Scoring**:
-
-| Component | Raw Score | Weight | Weighted |
-|-----------|-----------|--------|----------|
-| Geography | 100 | 0.25 | 25.0 |
-| Thematic | 100 | 0.30 | 30.0 |
-| Size | 100 | 0.15 | 15.0 |
-| Ownership | 100 | 0.20 | 20.0 |
-| Eligibility | 70 | 0.10 | 7.0 |
-
-**Base Score: 97.0**
-
-**Red Flags**: Minor - technical design not yet complete (-10%)
-
-**Final Score: 97.0 × 0.90 = 87.3 → 87**
-
----
-
-## Decision Rules
-
-### Ranking
-
-1. Sort all funders by final fit score (descending)
-2. Return top 5 matches
-3. Exclude any funder with final score < 30
-
-### Exclusion List
-
-Funders are excluded (not scored) when:
-- Instrument type is "loan" and project explicitly rejects debt
-- Geography explicitly excludes project country
-- Funder is currently closed to new applications (if known)
-
-### Tie-Breaking
-
-When fit scores are equal:
-1. Prefer grant over results-based grant over blended
-2. Prefer explicit community ownership support
-3. Prefer larger typical ticket size (more headroom)
-
----
-
-## Adjusting Weights
-
-Weights can be modified in `/data/scoring_weights.json`:
-
-```json
-{
-  "geography": 0.25,
-  "thematic": 0.30,
-  "size": 0.15,
-  "ownership": 0.20,
-  "eligibility": 0.10
-}
-```
-
-**Guidelines for Adjustment**:
-- Increase `ownership` weight for strict debt-sensitivity requirements
-- Increase `geography` weight when country-specific funding is critical
-- Increase `thematic` weight for highly specialized projects
-- Decrease `size` weight if project is flexible on funding amount
-
----
-
-## Transparency Principle
-
-Every score includes a rationale explaining:
-1. Which component contributed most to the score
-2. Why any penalties were applied
-3. What actions could improve the score
-
-This ensures users understand the matching logic and can address gaps.
+1. the component rationale;
+2. identified risk signals;
+3. the normalized debt tier;
+4. concrete next actions; and
+5. a reminder to verify current funder terms through an official source.

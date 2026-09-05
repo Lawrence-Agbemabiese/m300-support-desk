@@ -1,316 +1,165 @@
 # Risk and Debt Sensitivity Framework
 
-## The African Debt Context
+## Principle
 
-### Current Situation
+M300 should help users prefer low/no-debt finance while still evaluating realistic funding structures. Debt exposure is therefore a weighted decision factor, not a blanket rejection rule.
 
-Mission 300 aims to mobilize ~$90 billion to connect 300 million Africans to electricity by 2030. However, the financing architecture poses significant risks:
+The framework separates three questions that must not be conflated:
 
-- **87% of Africa's climate funding** comes from abroad, mostly as debt instruments
-- **Many sub-Saharan states** already spend more on debt servicing than on health and education
-- **M300 documents do not explicitly mention** non-debt instruments like grants or debt relief
+1. **Project preference:** how much debt the applicant is prepared to consider.
+2. **Funder structure:** whether the instrument may create debt or debt-like exposure.
+3. **Ownership and governance:** who owns, controls, benefits from, and carries obligations for the project.
 
-### The Debt Dilemma
+Ownership does not determine a project's debt tier. A community, public, hybrid, or private project can be debt-free or debt-financed.
 
-Even concessional loans from IDA create obligations that:
-1. Require budget allocation for repayment
-2. Reduce fiscal space for other priorities
-3. Create foreign currency exposure if denominated in USD/EUR
-4. May trigger cross-default clauses with other creditors
+## Two user-facing tiers
 
-For community energy projects, debt financing creates additional problems:
-- Communities cannot absorb sovereign debt obligations
-- Tariff guarantees create contingent government liabilities
-- Private capital requirements lead to profit extraction (capital flight)
+### Tier 1 — Low/no debt preferred
 
----
+Use when the project selects `grant_only` or `grant_preferred`, and for funding sources whose known structure is low/no debt.
 
-## Debt Sensitivity Screening
+Preferred characteristics include:
 
-The Support Desk applies a **four-tier debt sensitivity classification** to every project-funder combination:
+- grant or non-repayable support;
+- no sovereign or sub-sovereign guarantee;
+- no repayment obligation hidden in an implementation arrangement;
+- no bridge facility that the project cannot service; and
+- limited contingent liabilities.
 
-### Tier 1: Debt-Free (Green)
+Tier 1 receives a `1.00` scoring modifier.
 
-**Criteria**:
-- 100% grant funding
-- No loan component at any level
-- No sovereign or sub-sovereign guarantees required
-- No contingent liabilities created
-- Community or public ownership with no external equity
+### Tier 2 — Some debt accepted
 
-**Implications**: Project can proceed without debt concerns. Strongly aligned with grant-first M300 recommendations.
+Use when the project selects `open_to_blended` or `any_instrument`, and for funding sources with any material debt or debt-like exposure.
 
-### Tier 2: Minimal Debt Exposure (Yellow)
+Examples include:
 
-**Criteria**:
-- Grant covers >80% of capital cost
-- Any loan component is below $50,000 or is revolving working capital only
-- No sovereign guarantee required
-- Any debt is held by implementing entity (cooperative), not government
-- Debt is in local currency
+- blended grant/loan finance;
+- concessional or commercial loans;
+- results-based grants requiring bridge finance;
+- guarantees or government backstops;
+- foreign-currency obligations; and
+- equity arrangements carrying guaranteed returns or public contingencies.
 
-**Implications**: Acceptable if cooperative has capacity to service small debt. Monitor carefully. Prefer Tier 1 if available.
+Tier 2 receives a `0.90` modifier. It remains eligible for matching and may rank highly. Its risks must be stated and verified before a financing decision.
 
-### Tier 3: Moderate Debt Risk (Orange)
+### Legacy data
 
-**Criteria**:
-- Blended finance with significant loan component (20-50% of capital)
-- Results-based financing requiring bridge debt
-- Municipal/sub-national government must provide guarantee
-- Foreign currency debt exposure
+Older funder records may carry four numeric debt tiers. The application maps legacy Tier 1 to the current Tier 1 and legacy Tiers 2–4 to the current Tier 2. The detailed risk fields preserve the distinctions that the former colors attempted to summarize.
 
-**Implications**: Proceed with caution. Ensure community understands risks. Explicitly document debt implications. Seek alternatives.
+## Required due diligence
 
-### Tier 4: High Debt Risk (Red)
+For every Tier 2 opportunity—and any Tier 1 opportunity with unclear terms—verify:
 
-**Criteria**:
-- Majority loan financing (>50%)
-- Sovereign guarantee required
-- Private equity with government backstop obligations
-- Cross-default or acceleration clauses
-- Foreign currency debt for local revenue project
+| Question | Evidence to capture |
+|---|---|
+| What is the instrument? | Grant, RBF, loan, equity, guarantee, or components of a blend |
+| Who is the obligor? | National government, local government, project entity, cooperative, or private developer |
+| What is repayable? | Principal, interest, fees, guaranteed return, or pre-financed expenditure |
+| What guarantees apply? | Sovereign, sub-sovereign, tariff, offtake, parent-company, or counter-guarantee |
+| In what currency? | Obligation currency, revenue currency, hedging arrangement |
+| What is the repayment profile? | Rate, tenor, grace period, amortization, balloon payment, default provisions |
+| What contingent liabilities exist? | Termination payments, minimum revenue, take-or-pay, performance support |
+| Is information current? | Official source URL and verification date |
 
-**Implications**: Flag for exclusion. Does not align with debt-sensitive M300 approach. Recommend seeking grant alternatives.
+## Detailed risk signals
 
----
+The two-tier label is deliberately simple, but the assessment must retain specific signals:
 
-## Screening Questions
+### Fiscal and guarantee risk
 
-For every potential funding source, the Grant Matcher evaluates:
+- sovereign or sub-sovereign guarantee;
+- tariff or offtake support from a public entity;
+- termination payment or minimum-revenue commitment; and
+- counter-guarantee attached to third-party risk cover.
 
-### Question 1: What is the instrument type?
+### Repayment and affordability risk
 
-| Instrument | Debt Classification |
-|------------|---------------------|
-| Grant | Tier 1 |
-| Results-based grant (paid on delivery) | Tier 1-2 (depends on bridge finance) |
-| Concessional loan | Tier 3-4 |
-| Commercial loan | Tier 4 |
-| Equity investment | Tier 2-3 (depends on guarantee requirements) |
-| Guarantee | Tier 3-4 (creates contingent liability) |
-| Blended (grant + loan) | Evaluate by components |
+- debt-service burden relative to projected cash flow;
+- bridge-finance need for results-based payment;
+- short tenor, high interest, or balloon repayment;
+- uncertain demand or tariff collection; and
+- repayment obligation placed on an entity without demonstrated capacity.
 
-### Question 2: Who holds the debt obligation?
+### Currency and refinancing risk
 
-| Obligor | Risk Level |
-|---------|------------|
-| National government (sovereign) | Highest - affects national debt metrics |
-| State/municipal government | High - affects sub-sovereign fiscal space |
-| Community cooperative | Moderate - if within capacity |
-| Private developer | Lower for public finances (but may require guarantees) |
-| No debt obligation | None |
+- foreign-currency debt against local-currency revenue;
+- unpriced or unavailable hedging;
+- refinancing dependency; and
+- acceleration or cross-default provisions.
 
-### Question 3: What guarantees are required?
+### Ownership and benefit risk
 
-| Guarantee Type | Debt Impact |
-|----------------|-------------|
-| Sovereign guarantee | Creates contingent liability, treated as debt by IMF |
-| Sub-sovereign guarantee | Affects state/municipal balance sheet |
-| Tariff/offtake guarantee | Implicit fiscal commitment |
-| Partial risk guarantee (DFI-provided) | Generally acceptable if no government counter-guarantee |
-| No guarantee | None |
+- unclear asset ownership;
+- guaranteed private return backed by public resources;
+- weak community benefit-sharing;
+- limited local participation in governance; and
+- revenue extraction without corresponding risk transfer or service obligations.
 
-### Question 4: What is the currency of obligation?
+These signals inform scoring, the risk register, and next actions. They do not automatically remove a match.
 
-| Currency | Risk Level |
-|----------|------------|
-| Local currency | Lower - no FX exposure |
-| USD/EUR | Higher - FX risk, especially for local revenue projects |
-| SDR or multi-currency | Moderate - partial hedging |
+## Risk register template
 
-### Question 5: What are the repayment terms?
-
-| Terms | Risk Assessment |
-|-------|-----------------|
-| Grace period >5 years | More manageable |
-| Concessional rate <2% | Lower burden |
-| Market rate >5% | Significant burden |
-| Balloon payment | High refinancing risk |
-| Amortizing over 15+ years | More manageable |
-
----
-
-## Risk Register Template
-
-Every proposal includes a debt-sensitivity section in the risk register:
-
-```
+```text
 DEBT SENSITIVITY ASSESSMENT
 
-1. Funding Structure
-   - Grant component: [X]%
-   - Loan component: [Y]%
-   - Equity component: [Z]%
+1. Project preference
+   - Debt preference: [grant_only/grant_preferred/open_to_blended/any_instrument]
+   - Project tier: [Tier 1/Tier 2]
 
-2. Debt Obligations
-   - Principal amount: [If any]
-   - Interest rate: [If applicable]
-   - Repayment period: [If applicable]
-   - Currency: [Local/Foreign]
+2. Funding structure
+   - Grant component: [amount/%/unknown]
+   - Debt component: [amount/%/unknown]
+   - Equity or guarantee component: [amount/%/unknown]
 
-3. Guarantee Requirements
-   - Sovereign guarantee: [Yes/No]
-   - Sub-sovereign guarantee: [Yes/No]
-   - Other guarantees: [Specify]
+3. Obligations
+   - Obligor: [entity]
+   - Principal, rate, tenor, and grace period: [terms/unknown]
+   - Currency and revenue currency: [currencies/unknown]
 
-4. Contingent Liabilities
-   - Tariff guarantees: [Yes/No]
-   - Offtake commitments: [Yes/No]
-   - Other contingencies: [Specify]
+4. Guarantees and contingencies
+   - Sovereign/sub-sovereign guarantee: [yes/no/unknown]
+   - Tariff/offtake/termination support: [details/unknown]
+   - Other contingent liabilities: [details/unknown]
 
-5. Debt Sensitivity Classification
-   - Tier: [1/2/3/4]
-   - Rationale: [Explanation]
+5. Risk signals
+   - Fiscal: [details]
+   - Repayment/affordability: [details]
+   - Currency/refinancing: [details]
+   - Ownership/benefit-sharing: [details]
 
-6. Mitigation Measures
-   - [If Tier 2-4, what measures reduce risk?]
+6. Mitigation and decision
+   - Mitigations: [actions]
+   - Residual risk: [low/moderate/high/unknown]
+   - Recommendation: [proceed/compare/negotiate/do not proceed]
 
-7. Impact Statement
-   - Impact on sovereign debt: [None/Minimal/Moderate/Significant]
-   - Impact on sub-sovereign debt: [None/Minimal/Moderate/Significant]
-   - Impact on community/cooperative: [None/Minimal/Moderate/Significant]
+7. Verification
+   - Official source: [URL]
+   - Verified on: [date]
+   - Verified by: [name/role]
 ```
 
----
+## Decision guidance
 
-## Red Flags
+| Finding | Treatment |
+|---|---|
+| Confirmed low/no-debt terms | Tier 1; prefer where overall fit is comparable |
+| Some debt with manageable terms | Tier 2; retain, rank, and document mitigations |
+| RBF requires bridge funding | Tier 2; identify bridge source and repayment capacity |
+| Sovereign or municipal guarantee | Tier 2; escalate for fiscal and legal review |
+| Foreign-currency debt/local-currency revenue | Tier 2; quantify FX stress and mitigation |
+| Terms are unknown or stale | Keep as provisional; require official-source verification |
+| Explicit eligibility failure | Exclude only when supported by a verified current source |
 
-### Automatic Exclusion Triggers
+## Project-preference behavior
 
-The following patterns trigger automatic exclusion from grant matching:
+- `grant_only`: prioritize Tier 1; show Tier 2 only as a lower-ranked alternative with an instrument-mismatch warning.
+- `grant_preferred`: prioritize Tier 1; show viable Tier 2 options with full risks.
+- `open_to_blended`: classify the project Tier 2 and compare grant, debt, and blended structures.
+- `any_instrument`: classify the project Tier 2 and require complete term review before recommendation.
 
-1. **Sovereign guarantee required for community project** - Inappropriate risk transfer
-2. **>50% loan financing for non-commercial project** - Not viable for public/community infrastructure
-3. **Foreign currency debt for local currency revenue** - Unmanageable FX risk
-4. **Acceleration/cross-default clauses** - Cascading risk unacceptable for community assets
+## Governance and review
 
-### Warning Flags (Require Explicit Documentation)
+The framework supports informed choice rather than substituting for financial, legal, or sovereign-debt advice. Before a funding decision, a qualified reviewer should confirm current terms, affordability, authority to borrow or guarantee, procurement implications, and material community impacts.
 
-1. **Any loan component** - Must document community capacity to repay
-2. **Results-based financing** - Must identify bridge finance source
-3. **Municipal guarantee** - Must assess sub-sovereign fiscal capacity
-4. **Private developer involvement** - Must clarify ownership and guarantee structure
-
----
-
-## Alignment with M300 Recommendations
-
-The debt sensitivity framework directly operationalizes recommendations from M300 analysis:
-
-### "Prioritize grants rather than loans to avoid adding to debt distress"
-
-→ Our scoring heavily weights grant instruments over loans
-→ Tier 1 (debt-free) projects score 20% higher than Tier 3
-
-### "Unconditional debt cancellation should accompany M300"
-
-→ We flag when project countries have unsustainable debt
-→ We recommend grant-only approaches for high-debt countries
-
-### "Promote public and community ownership to prevent capital flight"
-
-→ Community ownership scores highest in our matching
-→ We flag private equity structures that require government backstops
-
-### "Protect fiscal capacity for health, education, other priorities"
-
-→ We assess whether financing would constrain fiscal space
-→ We recommend smaller, grant-funded projects over large loan-dependent ones
-
----
-
-## Country Debt Context
-
-When processing a project, the system considers the country's debt situation:
-
-### High-Debt Stress Countries (Grant-Only Recommended)
-
-Countries where IMF/World Bank assess debt as "high risk" or "in distress":
-- Zambia, Ghana, Chad, Mozambique, Zimbabwe, etc.
-
-For these countries:
-- Tier 3-4 funders are automatically flagged
-- Grant-only pathway is strongly recommended
-- Any loan component triggers explicit warning
-
-### Moderate-Debt Stress Countries (Careful Assessment)
-
-Countries with elevated but manageable debt:
-- Nigeria, Kenya, Senegal, Côte d'Ivoire, etc.
-
-For these countries:
-- Tier 3 funders require explicit justification
-- Sub-sovereign debt capacity assessed separately
-- Blended finance acceptable if grant-heavy (>70%)
-
-### Lower-Debt Stress Countries (Standard Assessment)
-
-Countries with sustainable debt levels:
-- Botswana, Rwanda, etc.
-
-For these countries:
-- Full range of funders considered
-- Standard scoring applies
-- Still prefer grants for community projects
-
----
-
-## Practical Application
-
-### Example: Nigeria (Moderate Stress)
-
-**Context**: Nigeria's debt service-to-revenue ratio is concerning but not critical. However, sub-national governments (states) have highly variable fiscal health.
-
-**Implication for Kaduna Mini-Grid Project**:
-- Sovereign guarantee: Not required - community project
-- State guarantee: Not required - cooperative ownership
-- Debt classification: Tier 1 (grant-only proposed)
-- Assessment: Appropriate structure for Nigeria context
-
-### Example: Zambia (High Stress)
-
-**Context**: Zambia underwent debt restructuring in 2023. Sovereign borrowing capacity is severely constrained.
-
-**Implication for hypothetical Zambian project**:
-- Any IDA loan: Would add to already distressed debt - exclude
-- Private equity requiring guarantee: Creates contingent liability - exclude
-- Grant-only funders: Only appropriate pathway
-- Assessment: Strict grant-only requirement; flag any debt component
-
----
-
-## Summary Decision Tree
-
-```
-START
-│
-├─ Is funder instrument a grant?
-│  ├─ YES → Tier 1 (Green) - Proceed
-│  └─ NO → Continue
-│
-├─ Is it results-based grant?
-│  ├─ YES → Can community bridge finance?
-│  │  ├─ YES → Tier 2 (Yellow) - Proceed with caution
-│  │  └─ NO → Flag gap; seek bridge solution
-│  └─ NO → Continue
-│
-├─ Does it require sovereign guarantee?
-│  ├─ YES → Tier 4 (Red) - Exclude
-│  └─ NO → Continue
-│
-├─ Is loan component >50%?
-│  ├─ YES → Tier 4 (Red) - Exclude for community projects
-│  └─ NO → Continue
-│
-├─ Is loan component 20-50%?
-│  ├─ YES → Tier 3 (Orange) - Proceed only if no alternatives
-│  └─ NO → Continue
-│
-├─ Is there any loan component?
-│  ├─ YES → Tier 2 (Yellow) - Document capacity to repay
-│  └─ NO → Tier 1 (Green) - Proceed
-│
-END
-```
-
-This framework ensures that every project-funder match is evaluated through a debt-sensitivity lens, preventing well-intentioned electrification efforts from worsening Africa's debt crisis.
+The user-facing tier should remain stable and understandable; the risk register carries the analytical detail needed for responsible follow-through.

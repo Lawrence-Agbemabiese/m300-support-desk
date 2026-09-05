@@ -16,8 +16,6 @@ export interface ScoringWeights {
   debt_sensitivity_modifiers: {
     tier_1: number;
     tier_2: number;
-    tier_3: number;
-    tier_4: number;
   };
   red_flag_penalties: {
     major: number;
@@ -29,8 +27,8 @@ export interface ScoringWeights {
 }
 
 export const scoringWeights: ScoringWeights = {
-  version: "1.0",
-  description: "Scoring weights for grant matching, aligned with M300 debt-sensitivity principles",
+  version: "2.0",
+  description: "Two-tier scoring weights for M300 grant matching; debt exposure is weighted, not an automatic exclusion",
   component_weights: {
     geography: {
       weight: 0.25,
@@ -55,9 +53,7 @@ export const scoringWeights: ScoringWeights = {
   },
   debt_sensitivity_modifiers: {
     tier_1: 1.0,
-    tier_2: 0.95,
-    tier_3: 0.75,
-    tier_4: 0.50
+    tier_2: 0.90
   },
   red_flag_penalties: {
     major: 0.50,

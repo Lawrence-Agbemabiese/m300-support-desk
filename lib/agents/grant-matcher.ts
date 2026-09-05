@@ -1,8 +1,14 @@
 import type { ProjectIntake, GrantMatch, GrantMatchItem } from '@/lib/schemas';
 import { grants, type Grant } from '@/lib/data/grants';
 import { scoringWeights } from '@/lib/data/weights';
+import { normalizeFundingTier, type CurrentFundingTier } from '@/lib/funding-tiers';
 
-type DebtTier = 'tier_1' | 'tier_2' | 'tier_3' | 'tier_4';
+type DebtTier = CurrentFundingTier;
+
+type SupportedProjectIntake = ProjectIntake & {
+  technology_other?: string;
+  ownership_other?: string;
+};
 
 interface ScoreResult {
   score: number;
@@ -43,7 +49,10 @@ function scoreGeography(grant: Grant, projectCountry: string): ScoreResult {
 }
 
 function scoreThematic(grant: Grant, project: ProjectIntake): ScoreResult {
-  const techType = project.technology_type.toLowerCase();
+  const extendedProject = project as SupportedProjectIntake;
+  const techType = project.technology_type === 'other' && extendedProject.technology_other?.trim()
+    ? extendedProject.technology_other.trim().toLowerCase()
+    : project.technology_type.toLowerCase();
   const productiveUses = project.productive_uses || [];
 
   const primaryFocus = grant.thematic_focus.primary || [];
@@ -120,7 +129,7 @@ function scoreSize(grant: Grant, estimatedCost: number): ScoreResult {
   return { score: 30, explanation: `Project cost $${estimatedCost.toLocaleString()} outside typical range ($${minUsd.toLocaleString()}-$${maxUsd.toLocaleString()})` };
 }
 
-function scoreOwnership(grant: Grant, ownershipModel: string): ScoreResult {
+function scoreOwnership(grant: Grant, ownershipModel: string, ownershipOther?: string): ScoreResult {
   const communityNote = grant.notes_on_alignment_to_community_ownership || '';
 
   if (ownershipModel === 'community_cooperative') {
@@ -142,7 +151,10 @@ function scoreOwnership(grant: Grant, ownershipModel: string): ScoreResult {
     return { score: 20, explanation: 'Weak: Private IPP model less suited for grant funding; may require guarantees' };
   }
 
-  return { score: 60, explanation: 'Ownership model not clearly classified' };
+  const ownershipLabel = ownershipModel === 'other' && ownershipOther?.trim()
+    ? ownershipOther.trim()
+    : ownershipModel.replace(/_/g, ' ');
+  return { score: 60, explanation: `Ownership model (${ownershipLabel}) requires funder-specific verification` };
 }
 
 function scoreEligibility(grant: Grant, project: ProjectIntake): ScoreResult {
@@ -238,7 +250,7 @@ function calculateFinalScore(
   ownershipScore: number,
   eligibilityScore: number,
   redFlags: string[],
-  debtTier: number
+  debtTier: DebtTier
 ): number {
   const weights = scoringWeights.component_weights;
 
@@ -255,10 +267,7 @@ function calculateFinalScore(
 
   // Apply debt sensitivity modifier
   const debtModifiers = scoringWeights.debt_sensitivity_modifiers;
-  const debtModifier = debtTier === 1 ? debtModifiers.tier_1 :
-                       debtTier === 2 ? debtModifiers.tier_2 :
-                       debtTier === 3 ? debtModifiers.tier_3 :
-                       debtModifiers.tier_4;
+  const debtModifier = debtModifiers[debtTier];
 
   // Calculate final score
   const finalScore = baseScore * (1 - flagPenalty) * debtModifier;
@@ -267,6 +276,7 @@ function calculateFinalScore(
 }
 
 export function matchGrants(project: ProjectIntake): GrantMatch {
+  const extendedProject = project as SupportedProjectIntake;
   const results: GrantMatchItem[] = [];
 
   for (const grant of grants) {
@@ -274,15 +284,15 @@ export function matchGrants(project: ProjectIntake): GrantMatch {
     const geoResult = scoreGeography(grant, project.country);
     const thematicResult = scoreThematic(grant, project);
     const sizeResult = scoreSize(grant, project.estimated_cost_usd);
-    const ownershipResult = scoreOwnership(grant, project.ownership_model);
+    const ownershipResult = scoreOwnership(grant, project.ownership_model, extendedProject.ownership_other);
     const eligibilityResult = scoreEligibility(grant, project);
 
     // Get red flags
     const redFlags = identifyRedFlags(grant, project);
 
     // Get debt tier
-    const debtTier = grant.debt_sensitivity_tier;
-    const debtTierStr = `tier_${debtTier}` as DebtTier;
+    // Historical numeric tiers above 1 normalize to the current Tier 2.
+    const debtTier = normalizeFundingTier(grant.debt_sensitivity_tier);
 
     // Calculate final score
     const finalScore = calculateFinalScore(
@@ -303,13 +313,18 @@ export function matchGrants(project: ProjectIntake): GrantMatch {
       funder_name: grant.funder_name,
       instrument_type: grant.instrument_type as GrantMatchItem['instrument_type'],
       fit_score: finalScore,
-      debt_sensitivity_tier: debtTierStr,
+      debt_sensitivity_tier: debtTier,
       score_breakdown: {
         geography_score: geoResult.score,
         thematic_score: thematicResult.score,
         size_score: sizeResult.score,
         ownership_score: ownershipResult.score,
         eligibility_score: eligibilityResult.score,
+        red_flag_penalty: Math.min(
+          redFlags.length * scoringWeights.red_flag_penalties.minor,
+          scoringWeights.red_flag_penalties.max_total
+        ),
+        debt_sensitivity_modifier: scoringWeights.debt_sensitivity_modifiers[debtTier],
       },
       fit_rationale: [
         geoResult.explanation,
@@ -355,8 +370,6 @@ export function matchGrants(project: ProjectIntake): GrantMatch {
   // Calculate debt sensitivity summary
   const tier1Count = matches.filter((m) => m.debt_sensitivity_tier === 'tier_1').length;
   const tier2Count = matches.filter((m) => m.debt_sensitivity_tier === 'tier_2').length;
-  const tier3Count = matches.filter((m) => m.debt_sensitivity_tier === 'tier_3').length;
-  const tier4Count = matches.filter((m) => m.debt_sensitivity_tier === 'tier_4').length;
 
   return {
     project_name: project.project_name,
@@ -366,13 +379,11 @@ export function matchGrants(project: ProjectIntake): GrantMatch {
     debt_sensitivity_summary: {
       tier_1_count: tier1Count,
       tier_2_count: tier2Count,
-      tier_3_count: tier3Count,
-      tier_4_count: tier4Count,
       recommendation: tier1Count > 0
-        ? 'Multiple grant-only options available - prioritize these for debt-free financing'
+        ? 'Low/no-debt options are available - prioritize these while verifying current terms'
         : tier2Count > 0
-        ? 'Consider results-based grants but plan for bridge financing'
-        : 'Limited debt-free options - evaluate carefully',
+        ? 'Some-debt options are available; compare repayment, currency, guarantee, and bridge-finance risks'
+        : 'No qualifying options found; review current funder terms and project parameters',
     },
     matching_metadata: {
       total_funders_evaluated: grants.length,
