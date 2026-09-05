@@ -23,7 +23,8 @@ CREATE INDEX "Project_status_createdAt_idx" ON "Project"("status", "createdAt");
 ALTER TABLE "ProjectRevision" ADD CONSTRAINT "ProjectRevision_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "ProjectRevision" ADD CONSTRAINT "ProjectRevision_createdByAdvisorId_fkey" FOREIGN KEY ("createdByAdvisorId") REFERENCES "Advisor"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
--- Server-only Prisma access; no public Data API policies.
+-- Server-only Prisma access through Railway PostgreSQL. No client-facing
+-- database roles or policies are defined; non-owner roles remain denied by RLS.
 ALTER TABLE "Invite" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "DiscoveredGrant" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "GrantSearch" ENABLE ROW LEVEL SECURITY;
