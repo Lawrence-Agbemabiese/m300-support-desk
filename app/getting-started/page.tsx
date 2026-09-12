@@ -21,6 +21,10 @@ const advisorSteps = [
     title: 'Use proposal outline and grant matches together',
     body: 'The strongest workflow is to treat the outline as the narrative layer and the checklist as the evidence layer before sharing with funders or reviewers.',
   },
+  {
+    title: 'Revisit and improve an existing project',
+    body: 'Open Projects, select View & Revise on a project, and use Revise & Reanalyse to update its original inputs. The project page keeps each earlier version in Revision History.',
+  },
 ];
 
 export default function GettingStartedPage() {

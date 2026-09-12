@@ -153,6 +153,28 @@ export default function ProjectsPage() {
         </Link>
       </div>
 
+      {advisor && (
+        <Card className="mb-6 border-emerald-200 bg-emerald-50/70">
+          <CardContent className="flex flex-col gap-4 py-5 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-700">
+                What&apos;s new
+              </p>
+              <h2 className="mt-1 text-lg font-semibold text-slate-900">
+                Search, revise, reanalyse, and retain project history
+              </h2>
+              <p className="mt-1 max-w-4xl text-sm leading-6 text-slate-700">
+                Use search to find a project, then select its visible View &amp; Revise action to open the
+                full analysis, update the original inputs, and see every saved revision.
+              </p>
+            </div>
+            <Link href="/getting-started" className="shrink-0">
+              <Button variant="outline">See Updated Workflow</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      )}
+
       {advisor && (advisor.projectCount ?? 0) === 0 && (
         <Card className="mb-6 border-emerald-200 bg-emerald-50/70">
           <CardContent className="flex flex-col gap-4 py-5 lg:flex-row lg:items-center lg:justify-between">
@@ -292,37 +314,50 @@ export default function ProjectsPage() {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 gap-3 text-left sm:grid-cols-3 lg:min-w-[420px] lg:text-right">
-                        {project.m300Score !== null && (
-                          <div>
-                            <div className="text-2xl font-bold text-gray-900">
-                              {project.m300Score}
+                      <div className="flex flex-col gap-4 lg:min-w-[460px]">
+                        <div className="grid grid-cols-1 gap-3 text-left sm:grid-cols-3 lg:text-right">
+                          {project.m300Score !== null && (
+                            <div>
+                              <div className="text-2xl font-bold text-gray-900">
+                                {project.m300Score}
+                              </div>
+                              <div className="text-xs text-gray-500">M300 Score</div>
                             </div>
-                            <div className="text-xs text-gray-500">M300 Score</div>
-                          </div>
-                        )}
-                        {project.debtTier && (
-                          <div>
-                            <div
-                              className={`text-lg font-bold ${
-                                tierColors[project.debtTier] || 'text-gray-600'
-                              }`}
-                            >
-                              {fundingTierName(project.debtTier)}
+                          )}
+                          {project.debtTier && (
+                            <div>
+                              <div
+                                className={`text-lg font-bold ${
+                                  tierColors[project.debtTier] || 'text-gray-600'
+                                }`}
+                              >
+                                {fundingTierName(project.debtTier)}
+                              </div>
+                              <div className="text-xs text-gray-500">Funding Tier</div>
                             </div>
-                            <div className="text-xs text-gray-500">Funding Tier</div>
-                          </div>
-                        )}
-                        {project.topFunder && (
-                          <div className="max-w-[150px]">
-                            <div className="text-sm font-medium text-gray-900 truncate">
-                              {project.topFunder}
+                          )}
+                          {project.topFunder && (
+                            <div className="sm:ml-auto sm:max-w-[150px]">
+                              <div className="truncate text-sm font-medium text-gray-900">
+                                {project.topFunder}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                Top Match ({project.topFunderScore}/100)
+                              </div>
                             </div>
-                            <div className="text-xs text-gray-500">
-                              Top Match ({project.topFunderScore}/100)
-                            </div>
-                          </div>
-                        )}
+                          )}
+                        </div>
+                        <div className="flex flex-col gap-2 border-t border-gray-100 pt-3 sm:flex-row sm:items-center sm:justify-end">
+                          <span className="text-xs text-gray-500">
+                            Open the full analysis, editing tools, and revision history
+                          </span>
+                          <span className="inline-flex items-center justify-center rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-800">
+                            View &amp; Revise
+                            <svg className="ml-1.5 h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                              <path fillRule="evenodd" d="M5.22 14.78a.75.75 0 010-1.06L8.94 10 5.22 6.28a.75.75 0 011.06-1.06l4.25 4.25a.75.75 0 010 1.06l-4.25 4.25a.75.75 0 01-1.06 0zm5 0a.75.75 0 010-1.06L13.94 10l-3.72-3.72a.75.75 0 111.06-1.06l4.25 4.25a.75.75 0 010 1.06l-4.25 4.25a.75.75 0 01-1.06 0z" clipRule="evenodd" />
+                            </svg>
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
