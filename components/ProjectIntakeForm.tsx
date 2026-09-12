@@ -363,9 +363,22 @@ export function ProjectIntakeForm({ onSubmit, loading = false, initialData, titl
               value={formData.technology_type || ''}
               onChange={(e) => updateField('technology_type', e.target.value as ProjectIntake['technology_type'])}
               error={errors.technology_type}
+              helperText="Choose Other to describe a technology that is not listed."
               required
             />
-            {formData.technology_type === 'other' && <Input label="Describe Technology" placeholder="e.g., biomass gasification" value={formData.technology_other || ''} onChange={(e) => updateField('technology_other', e.target.value)} error={errors.technology_other} required />}
+            {formData.technology_type === 'other' && (
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 p-3">
+                <Input
+                  label="Describe Technology"
+                  placeholder="e.g., biomass gasification"
+                  value={formData.technology_other || ''}
+                  onChange={(e) => updateField('technology_other', e.target.value)}
+                  error={errors.technology_other}
+                  helperText="This description will be retained in the project record and analysis."
+                  required
+                />
+              </div>
+            )}
             <Input
               label="Capacity (kW)"
               type="number"
@@ -417,10 +430,22 @@ export function ProjectIntakeForm({ onSubmit, loading = false, initialData, titl
               value={formData.ownership_model || ''}
               onChange={(e) => updateField('ownership_model', e.target.value as ProjectIntake['ownership_model'])}
               error={errors.ownership_model}
-              helperText="Community cooperative is recommended for best grant alignment"
+              helperText="Choose Other to describe a model that is not listed. Community cooperative is recommended for best grant alignment."
               required
             />
-            {formData.ownership_model === 'other' && <Input label="Describe Ownership Model" placeholder="Describe the legal and beneficial ownership arrangement" value={formData.ownership_other || ''} onChange={(e) => updateField('ownership_other', e.target.value)} error={errors.ownership_other} required />}
+            {formData.ownership_model === 'other' && (
+              <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 p-3">
+                <Input
+                  label="Describe Ownership Model"
+                  placeholder="Describe the legal and beneficial ownership arrangement"
+                  value={formData.ownership_other || ''}
+                  onChange={(e) => updateField('ownership_other', e.target.value)}
+                  error={errors.ownership_other}
+                  helperText="This description will be retained in the project record and analysis."
+                  required
+                />
+              </div>
+            )}
             <Textarea
               label="Target Beneficiaries"
               placeholder="Describe who will benefit (households, institutions, businesses...)"

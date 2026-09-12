@@ -59,6 +59,31 @@ export default function Home() {
           </div>
         </section>
 
+        <section
+          aria-labelledby="release-highlights-heading"
+          className="mt-8 rounded-2xl border border-emerald-200 bg-white px-6 py-5 shadow-[0_12px_36px_rgba(15,23,42,0.05)] sm:flex sm:items-center sm:justify-between sm:gap-6"
+        >
+          <div>
+            <p className="text-sm font-bold uppercase tracking-[0.16em] text-emerald-700">
+              September 2026 update
+            </p>
+            <h2 id="release-highlights-heading" className="mt-2 text-xl font-bold text-slate-900">
+              Projects are now searchable, revisable, and versioned.
+            </h2>
+            <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-600">
+              Open any project to revise its inputs, rerun the analysis, and review its revision history.
+              In the intake form, selecting Other for technology or ownership reveals a custom text field.
+            </p>
+          </div>
+          <Button
+            onClick={() => router.push('/projects')}
+            variant="outline"
+            className="mt-4 shrink-0 sm:mt-0"
+          >
+            Explore Updated Projects
+          </Button>
+        </section>
+
         <section className="mt-14">
           <div className="mb-8 max-w-3xl">
             <p className="text-sm font-bold uppercase tracking-[0.18em] text-emerald-700">
